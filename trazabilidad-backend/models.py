@@ -13,29 +13,32 @@ class Usuario(Base):
 
 class Cliente(Base):
     __tablename__ = "clientes"
+
     id = Column(Integer, primary_key=True, index=True)
-    nombre = Column(String, nullable=False)
-    empresa = Column(String, nullable=True)
-    
-    # Relación uno a muchos con materiales
-    materiales = relationship("Material", back_populates="cliente_rel")
+    nombre = Column(String, index=True)
+    email = Column(String, nullable=True)
+    telefono = Column(String, nullable=True)
+    direccion_entrega = Column(String, nullable=True)
+    calificacion = Column(Float, default=5.0)
+
 
 class Conductor(Base):
     __tablename__ = "conductores"
+
     id = Column(Integer, primary_key=True, index=True)
-    nombre = Column(String, nullable=False)
-    licencia = Column(String, nullable=True)
-    
-    materiales = relationship("Material", back_populates="conductor_rel")
+    nombre = Column(String, index=True)
+    vehiculo_asignado = Column(String, nullable=True)
+    calificacion = Column(Float, default=5.0)
+
 
 class Ruta(Base):
     __tablename__ = "rutas"
-    id = Column(Integer, primary_key=True, index=True)
-    origen = Column(String, nullable=False)
-    destino = Column(String, nullable=False)
-    
-    materiales = relationship("Material", back_populates="ruta_rel")
 
+    id = Column(Integer, primary_key=True, index=True)
+    nombre_ruta = Column(String, index=True)
+    distancia_km = Column(Float, nullable=True)
+    tiempo_estimado = Column(String, nullable=True)
+    
 class Material(Base):
     __tablename__ = "materiales"
 
