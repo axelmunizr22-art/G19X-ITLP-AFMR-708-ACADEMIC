@@ -3,6 +3,9 @@
 <!-- PROJECT_STRUCTURE_START -->
 ```
 ├── 📄 .gitignore
+├── 📁 docs/
+│   ├── 📄 MVP.md
+│   └── 📄 PRD.md
 ├── 📄 structure.md
 ├── 📁 trazabilidad-backend/
 │   ├── 📄 .env
