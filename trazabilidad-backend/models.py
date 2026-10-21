@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text, Float
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from database import Base
@@ -21,6 +21,9 @@ class Cliente(Base):
     direccion_entrega = Column(String, nullable=True)
     calificacion = Column(Float, default=5.0)
 
+    # Relación bidireccional alineada con Material
+    materiales = relationship("Material", back_populates="cliente_rel")
+
 
 class Conductor(Base):
     __tablename__ = "conductores"
@@ -30,6 +33,9 @@ class Conductor(Base):
     vehiculo_asignado = Column(String, nullable=True)
     calificacion = Column(Float, default=5.0)
 
+    # Relación bidireccional alineada con Material
+    materiales = relationship("Material", back_populates="conductor_rel")
+
 
 class Ruta(Base):
     __tablename__ = "rutas"
@@ -38,6 +44,10 @@ class Ruta(Base):
     nombre_ruta = Column(String, index=True)
     distancia_km = Column(Float, nullable=True)
     tiempo_estimado = Column(String, nullable=True)
+
+    # Relación bidireccional alineada con Material
+    materiales = relationship("Material", back_populates="ruta_rel")
+
     
 class Material(Base):
     __tablename__ = "materiales"
@@ -48,16 +58,17 @@ class Material(Base):
     estado = Column(String, default="En Almacén (Pendiente de Asignación)")
     metodo_captura = Column(String, default="Código QR (Guía Digital)")
     
-    # CLAVES FORÁNEAS (Relaciones a tus otras tablas)
+    # CLAVES FORÁNEAS
     cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=True)
     conductor_id = Column(Integer, ForeignKey("conductores.id"), nullable=True)
     ruta_id = Column(Integer, ForeignKey("rutas.id"), nullable=True)
 
-    # RELACIONES ORM
+    # RELACIONES ORM ALINEADAS
     cliente_rel = relationship("Cliente", back_populates="materiales")
     conductor_rel = relationship("Conductor", back_populates="materiales")
     ruta_rel = relationship("Ruta", back_populates="materiales")
     historial = relationship("HistorialTrazabilidad", back_populates="material_rel", cascade="all, delete-orphan")
+
 
 class HistorialTrazabilidad(Base):
     __tablename__ = "historial_trazabilidad"

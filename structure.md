@@ -2,12 +2,15 @@
 
 <!-- PROJECT_STRUCTURE_START -->
 ```
+├── 📄 .gitignore
 ├── 📄 structure.md
 ├── 📁 trazabilidad-backend/
 │   ├── 📄 .env
+│   ├── 📄 .env.example
 │   ├── 📄 database.py
 │   ├── 📄 main.py
 │   ├── 📄 models.py
+│   ├── 📄 requirements.txt
 │   ├── 📄 simulador_iot.py
 │   ├── 📄 trazabilidad.db
 │   ├── 📁 venv/
@@ -5461,6 +5464,7 @@
     ├── 📁 public/
     │   ├── 📄 favicon.svg
     │   └── 📄 icons.svg
+    ├── 📄 README.md
     ├── 📁 src/
     │   ├── 📄 App.css
     │   ├── 📄 App.jsx
