@@ -7,12 +7,32 @@ from typing import Optional
 from dotenv import load_dotenv
 load_dotenv()
 
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session, sessionmaker
 from pydantic import BaseModel
 from database import engine, Base, get_db
 import models
+
+# 1. Crear las tablas en la Base de Datos si no existen
+Base.metadata.create_all(bind=engine)
+
+# 2. Inicializar la app de FastAPI
+app = FastAPI(title="PluriOne Trace API")
+
+# 3. Configuración de CORS para permitir la conexión con React (puerto 5173)
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # --- INTEGRACIÓN CON GEMINI ---
 from google import genai
@@ -231,7 +251,7 @@ def registrar_material(material: MaterialCreate, db: Session = Depends(get_db)):
 
     if not cliente_obj:
         # Se crean solo campos presentes en el esquema conocido de Cliente.
-        cliente_obj = models.Cliente(nombre=nombre_cliente, empresa=nombre_cliente)
+        cliente_obj = models.Cliente(nombre=nombre_cliente)
         db.add(cliente_obj)
         db.flush()
 
