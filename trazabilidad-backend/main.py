@@ -251,7 +251,7 @@ def registrar_material(material: MaterialCreate, db: Session = Depends(get_db)):
 
     if not cliente_obj:
         # Se crean solo campos presentes en el esquema conocido de Cliente.
-        cliente_obj = models.Cliente(nombre=nombre_cliente, empresa=nombre_cliente)
+        cliente_obj = models.Cliente(nombre=nombre_cliente)
         db.add(cliente_obj)
         db.flush()
 

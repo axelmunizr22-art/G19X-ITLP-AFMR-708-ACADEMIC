@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text, Float
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from database import Base
@@ -30,10 +30,13 @@ class Conductor(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String, index=True)
+    licencia = Column(String, nullable=True)
+    telefono = Column(String, nullable=True)
     vehiculo_asignado = Column(String, nullable=True)
-    calificacion = Column(Float, default=5.0)
+    estado = Column(String, default="Disponible")
+    disponible = Column(Boolean, default=True)
+    calificacion = Column(Float, default=5.0)  # <-- Asegúrate de incluir esta columna
 
-    # Relación bidireccional alineada con Material
     materiales = relationship("Material", back_populates="conductor_rel")
 
 
@@ -41,13 +44,14 @@ class Ruta(Base):
     __tablename__ = "rutas"
 
     id = Column(Integer, primary_key=True, index=True)
-    nombre_ruta = Column(String, index=True)
-    distancia_km = Column(Float, nullable=True)
+    nombre_ruta = Column(String, nullable=True)
+    origen = Column(String, index=True)
+    destino = Column(String, index=True)
     tiempo_estimado = Column(String, nullable=True)
+    distancia_km = Column(String, nullable=True)
+    calificacion_seguridad = Column(Float, default=5.0)  # <-- AGREGA ESTA LÍNEA
 
-    # Relación bidireccional alineada con Material
     materiales = relationship("Material", back_populates="ruta_rel")
-
     
 class Material(Base):
     __tablename__ = "materiales"
