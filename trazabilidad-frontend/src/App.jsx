@@ -574,21 +574,37 @@ export default function App() {
                         </div>
                       </div>
                       {analisisIA && (
-                        <div style={{
-                          backgroundColor: analisisIA.nivel_riesgo === 'Alto' ? '#fef2f2' : analisisIA.nivel_riesgo === 'Medio' ? '#fffbe1' : '#f0fdf4',
-                          borderLeft: `5px solid ${analisisIA.nivel_riesgo === 'Alto' ? '#dc2626' : analisisIA.nivel_riesgo === 'Medio' ? '#d97706' : '#16a34a'}`,
-                          padding: '14px', borderRadius: '8px', marginBottom: '16px'
-                        }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                            <span style={{ fontSize: '11px', fontWeight: '800', color: analisisIA.nivel_riesgo === 'Alto' ? '#dc2626' : analisisIA.nivel_riesgo === 'Medio' ? '#b45309' : '#16a34a', textTransform: 'uppercase' }}>
-                              🤖 Diagnóstico de IA — Riesgo {analisisIA.nivel_riesgo}
-                            </span>
-                            <span style={{ fontSize: '10px', color: '#64748b', fontWeight: '700' }}>Confianza: {analisisIA.fiabilidad_prediccion || 'Alta'}</span>
-                          </div>
-                          <p style={{ margin: '0 0 6px 0', fontSize: '12px', fontWeight: '600', color: '#1e293b' }}>{analisisIA.diagnostico_detallado || analisisIA.diagnostico_ia}</p>
-                          <p style={{ margin: 0, fontSize: '11px', color: '#475569', lineHeight: '1.4' }}><b>Recomendación:</b> {analisisIA.recomendacion_sugerida || 'Continuar monitoreo normal.'}</p>
-                        </div>
-                      )}
+  <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mt-4 shadow-sm">
+    <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+      🤖 Diagnóstico Inteligente de Riesgo (IA)
+    </h3>
+    <div className="grid grid-cols-2 gap-4 mt-3 text-sm">
+      <div>
+        <p className="text-slate-500">Nivel de Riesgo:</p>
+        <p className={`font-semibold text-base ${
+          analisisIA.nivel_riesgo === 'Alto' ? 'text-red-600' :
+          analisisIA.nivel_riesgo === 'Medio' ? 'text-amber-600' : 'text-emerald-600'
+        }`}>
+          {analisisIA.nivel_riesgo} ({analisisIA.porcentaje_evaluado}%)
+        </p>
+      </div>
+      <div>
+        <p className="text-slate-500">Checkpoints con Retraso:</p>
+        <p className="font-semibold text-slate-800 text-base">
+          {analisisIA.checkpoints_retrasados} de {analisisIA.checkpoints_totales} registrados
+        </p>
+      </div>
+    </div>
+    <div className="mt-3 text-sm">
+      <p className="text-slate-500">Diagnóstico del Trayecto:</p>
+      <p className="text-slate-700 font-medium">{analisisIA.diagnostico_ia}</p>
+    </div>
+    <div className="mt-2 text-sm">
+      <p className="text-slate-500">Recomendación Operativa:</p>
+      <p className="text-indigo-700 font-medium">{analisisIA.recomendacion}</p>
+    </div>
+  </div>
+)}
                       <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#0f172a', textTransform: 'uppercase', borderBottom: '1px solid #cbd5e1', paddingBottom: '4px' }}>
                         Historial de Puntos de Control y Escaneos
                       </h4>
@@ -600,34 +616,23 @@ export default function App() {
                             <th style={{ padding: '6px 8px', borderBottom: '1px solid #cbd5e1' }}>Estado Registrado</th>
                           </tr>
                         </thead>
-                        <tbody>
-                          {(guiaSeleccionada?.historial_trayecto || guiaSeleccionada?.historial || []).map((h, index) => {
-  // Captura el destino real del paquete o usa la ruta actual asignada
-  const destinoReal = formAsignacion.ruta_destino || guiaSeleccionada.destino || guiaSeleccionada.ciudad || 'La Piedad';
-
-  // Reemplaza "Calcetines" o "Chamarras" por la ciudad destino en tiempo de renderizado
-  let ubicacionLimpia = h.ubicacion || '';
-  if (ubicacionLimpia.includes('Calcetines')) {
-    ubicacionLimpia = ubicacionLimpia.replace(/Calcetines/g, destinoReal);
-  } else if (ubicacionLimpia.includes('Chamarras')) {
-    ubicacionLimpia = ubicacionLimpia.replace(/Chamarras/g, destinoReal);
-  }
-
-  return (
-    <tr key={h.id || index} style={{ borderBottom: '1px solid #f1f5f9' }}>
-      <td style={{ padding: '6px 8px', color: '#334155' }}>
-        {h.fecha_hora?.replace('T', ' ').slice(0, 16) || 'N/A'}
-      </td>
-      <td style={{ padding: '6px 8px', fontWeight: '600', color: '#0f172a' }}>
-        {ubicacionLimpia}
-      </td>
-      <td style={{ padding: '6px 8px', color: h.estado?.includes('Retrasado') ? '#dc2626' : '#0284c7' }}>
-        {h.estado}
-      </td>
-    </tr>
-  );
-})}
-                        </tbody>
+                        <tbody style={{ fontSize: '13px' }}>
+  {(guiaSeleccionada?.historial_trayecto || guiaSeleccionada?.historial || []).map((h, index) => {
+    return (
+      <tr key={h.id || index} style={{ borderBottom: '1px solid #f1f5f9' }}>
+        <td style={{ padding: '6px 8px', color: '#334155' }}>
+          {h.fecha_hora?.replace('T', ' ').slice(0, 16) || 'N/A'}
+        </td>
+        <td style={{ padding: '6px 8px', fontWeight: '600', color: '#0f172a' }}>
+          {h.ubicacion || 'N/A'}
+        </td>
+        <td style={{ padding: '6px 8px', color: h.estado?.includes('Retrasado') ? '#dc2626' : '#0284c7' }}>
+          {h.estado}
+        </td>
+      </tr>
+    );
+  })}
+</tbody>
                       </table>
                     </div>
                   </div>
@@ -838,91 +843,82 @@ export default function App() {
           </div>
         )}
 
-        {/* VISTA 4: ANÁLISIS DE IA */}
-        {seccionActiva === 'ia' && (
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <h1 style={{ margin: 0, fontSize: '28px', fontWeight: '800', color: '#0f172a' }}>Centro de Diagnóstico & IA Predictiva</h1>
-              <span style={{ backgroundColor: '#8b5cf6', color: '#ffffff', padding: '6px 16px', borderRadius: '20px', fontSize: '12px', fontWeight: '700' }}>Engine v1.0</span>
-            </div>
+     {/* --- VISTA DE ANÁLISIS DE IA ORDENADA Y PROFESIONAL --- */}
+{seccionActiva === 'ia' && (() => {
+  const totalMats = Array.isArray(materiales) ? materiales.length : 0;
+  const retrasados = Array.isArray(materiales) 
+    ? materiales.filter(m => m.estado && (m.estado.toLowerCase().includes('retrasado') || m.estado.toLowerCase().includes('alerta'))).length 
+    : 0;
+  const confiabilidad = totalMats > 0 ? Math.round(((totalMats - retrasados) / totalMats) * 100) : 100;
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '28px' }}>
-              <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                <span style={{ fontSize: '13px', color: '#64748b', fontWeight: '600' }}>Precisión del Algoritmo</span>
-                <p style={{ margin: '8px 0 0 0', fontSize: '28px', fontWeight: '800', color: '#8b5cf6' }}>94.8%</p>
-              </div>
-              <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                <span style={{ fontSize: '13px', color: '#64748b', fontWeight: '600' }}>Envíos en Alerta Máxima</span>
-                <p style={{ margin: '8px 0 0 0', fontSize: '28px', fontWeight: '800', color: '#ef4444' }}>
-                  {materiales.filter(m => m.estado?.includes('Retrasado')).length}
-                </p>
-              </div>
-              <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                <span style={{ fontSize: '13px', color: '#64748b', fontWeight: '600' }}>Ruta Óptima Promedio</span>
-                <p style={{ margin: '8px 0 0 0', fontSize: '28px', fontWeight: '800', color: '#16a34a' }}>98.2%</p>
-              </div>
-            </div>
+  return (
+    <div style={{ maxWidth: '1000px', margin: '0 auto', fontFamily: 'system-ui, sans-serif', color: '#1e293b' }}>
+      
+      {/* Tarjeta de Cabecera */}
+      <div style={{ backgroundColor: '#0f172a', color: '#ffffff', padding: '24px 32px', borderRadius: '16px', marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+        <div>
+          <h1 style={{ fontSize: '22px', fontWeight: '800', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+             Centro de Diagnóstico & IA Predictiva
+          </h1>
+          <p style={{ fontSize: '14px', color: '#94a3b8', margin: 0, maxWidth: '600px', lineHeight: '1.5' }}>
+            Evaluación analítica en tiempo real basada en el estado de los envíos, bitácora inmutable de checkpoints y tiempos de ruta.
+          </p>
+        </div>
+        <div style={{ backgroundColor: '#3b82f6', color: '#ffffff', padding: '6px 14px', borderRadius: '20px', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          Engine v2.0
+        </div>
+      </div>
 
-            <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-              <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', color: '#0f172a' }}>Evaluación de Riesgo por Paquete</h3>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {materiales.map((m) => {
-                  const esCritico = m.estado?.includes('Retrasado');
-                  const esEntregado = m.estado?.includes('Entregado');
-                  const clienteNom = typeof m.cliente === 'string' ? m.cliente : (m.cliente?.nombre || m.cliente_rel?.nombre || 'Sin Destinatario');
-                  
-                  return (
-                    <div key={m.id} style={{
-                      padding: '16px 20px',
-                      borderRadius: '10px',
-                      borderLeft: `6px solid ${esCritico ? '#ef4444' : esEntregado ? '#16a34a' : '#0284c7'}`,
-                      backgroundColor: '#f8fafc',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <strong style={{ fontSize: '16px', color: '#0f172a' }}>
-                            {m.id} - {m.nombre}
-                          </strong>
-                          <span style={{ fontSize: '12px', color: '#64748b' }}>({clienteNom})</span>
-                        </div>
-                        <p style={{ margin: '6px 0 0 0', fontSize: '13px', color: '#334155' }}>
-                          Ubicación actual: <b>{m.ubicacion_actual}</b>
-                        </p>
-                      </div>
-
-                      <div style={{ textAlign: 'right' }}>
-                        <span style={{
-                          backgroundColor: esCritico ? '#fef2f2' : esEntregado ? '#f0fdf4' : '#e0f2fe',
-                          color: esCritico ? '#ef4444' : esEntregado ? '#16a34a' : '#0284c7',
-                          padding: '6px 14px',
-                          borderRadius: '20px',
-                          fontWeight: '800',
-                          fontSize: '12px',
-                          display: 'inline-block',
-                          marginBottom: '6px'
-                        }}>
-                          {esCritico ? 'Riesgo Alto' : esEntregado ? 'Riesgo Bajo' : 'Riesgo Moderado'}
-                        </span>
-                        <br />
-                        <button 
-                          onClick={() => { verGuiaYAnalisis(m.id); setSeccionActiva('panel'); }}
-                          style={{ background: 'none', border: 'none', color: '#2563eb', fontWeight: '700', fontSize: '12px', cursor: 'pointer' }}
-                        >
-                          Ver Diagnóstico Detallado →
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+      {/* Cuadrícula de 3 Columnas para Métricas */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+        
+        {/* Tarjeta 1 */}
+        <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+          <p style={{ fontSize: '12px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', margin: '0 0 10px 0' }}>Confiabilidad del Trayecto</p>
+          <p style={{ fontSize: '36px', fontWeight: '900', color: '#4f46e5', margin: '0 0 12px 0' }}>{confiabilidad}%</p>
+          <div style={{ display: 'inline-block', backgroundColor: '#ecfdf5', color: '#047857', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '600', marginBottom: '10px' }}>
+            🟢 Sincronizado con SQLite
           </div>
-        )}
+          <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>Calculado dinámicamente s/ estado de envíos activos.</p>
+        </div>
 
+        {/* Tarjeta 2 */}
+        <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+          <p style={{ fontSize: '12px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', margin: '0 0 10px 0' }}>Envíos con Retraso / Alerta</p>
+          <p style={{ fontSize: '36px', fontWeight: '900', color: retrasados > 0 ? '#dc2626' : '#1e293b', margin: '0 0 12px 0' }}>{retrasados}</p>
+          <div style={{ display: 'inline-block', backgroundColor: retrasados > 0 ? '#fef2f2' : '#f1f5f9', color: retrasados > 0 ? '#b91c1c' : '#475569', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '600', marginBottom: '10px' }}>
+            {retrasados > 0 ? '⚠️ Requiere Atención' : '✨ Sin Incidencias'}
+          </div>
+          <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>Basado en la bitácora inmutable de checkpoints.</p>
+        </div>
+
+        {/* Tarjeta 3 */}
+        <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+          <p style={{ fontSize: '12px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', margin: '0 0 10px 0' }}>Total Envíos Monitoreados</p>
+          <p style={{ fontSize: '36px', fontWeight: '900', color: '#0f172a', margin: '0 0 12px 0' }}>{totalMats}</p>
+          <div style={{ display: 'inline-block', backgroundColor: '#eef2ff', color: '#4f46e5', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '600', marginBottom: '10px' }}>
+            📦 Paquetes Registrados
+          </div>
+          <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>Volumen actual analizado por el motor analítico.</p>
+        </div>
+
+      </div>
+
+      {/* Tarjeta Inferior de Estado */}
+      <div style={{ backgroundColor: '#ffffff', padding: '20px 24px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+        <div>
+          <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: '#0f172a', margin: '0 0 4px 0' }}>Estado del Sistema Analítico</h3>
+          <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>El algoritmo procesa métricas en vivo conectadas directamente con la base de datos.</p>
+        </div>
+        <span style={{ backgroundColor: '#dcfce7', color: '#15803d', padding: '6px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 'bold' }}>
+          Sistema Operativo
+        </span>
+      </div>
+
+    </div>
+  );
+})()}
+    
       </main>
 
       {/* PESTAÑA / TOAST FLOTANTE DE NOTIFICACIÓN VERDE */}

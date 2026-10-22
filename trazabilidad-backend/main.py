@@ -14,13 +14,55 @@ from pydantic import BaseModel
 from database import engine, Base, get_db
 import models
 
-# 1. Crear las tablas en la Base de Datos si no existen
+# --- INTEGRACIÓN CON ENCRIPTACIÓN (BCRYPT) ---
+from passlib.context import CryptContext
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def obtener_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
+
+def verificar_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
+
+
+# --- INTEGRACIÓN CON GEMINI ---
+from google import genai
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
+
+
+# 1. Crear las tablas en la Base de Datos
 Base.metadata.create_all(bind=engine)
+# --- CREAR USUARIO DE PRUEBA AUTOMÁTICO ---
+from database import SessionLocal
+import models
 
-# 2. Inicializar la app de FastAPI
-app = FastAPI(title="PluriOne Trace API")
+def seed_usuario():
+    db = SessionLocal()
+    try:
+        existe = db.query(models.Usuario).filter(models.Usuario.correo == "admin@plurione.com").first()
+        if not existe:
+            nuevo = models.Usuario(
+                correo="admin@plurione.com",
+                password=obtener_password_hash("admin123"),
+                nombre="Administrador",
+                rol="Admin"
+            )
+            db.add(nuevo)
+            db.commit()
+    except Exception as e:
+        print("Seed error:", e)
+    finally:
+        db.close()
 
-# 3. Configuración de CORS para permitir la conexión con React (puerto 5173)
+seed_usuario()
+
+# 2. Inicializar la app de FastAPI (Instancia Única)
+app = FastAPI(title="PluriOne Trace API", version="1.0")
+
+# 3. Configuración de CORS
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
@@ -34,25 +76,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- INTEGRACIÓN CON GEMINI ---
-from google import genai
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
-
-Base.metadata.create_all(bind=engine)
-
-app = FastAPI(title="API de Trazabilidad de Materiales", version="1.0")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
+# ==========================================
 # SIMULACIÓN AUTOMÁTICA DE TRAZABILIDAD
+# ==========================================
 
 SimulationSession = sessionmaker(
     autocommit=False,
@@ -95,7 +122,6 @@ def simular_trayecto_automatico(
                 print(f"Simulación cancelada: no existe el material {material_id}")
                 break
 
-            # No sobrescribir una actualización manual posterior a la asignación.
             if material.estado and "Cancelado" in material.estado:
                 print(f"Simulación cancelada para {material_id}.")
                 break
@@ -109,7 +135,6 @@ def simular_trayecto_automatico(
                 estado=estado
             ))
             db.commit()
-
             print(f"[PluriOne Trace] {material_id}: {ubicacion} - {estado}")
 
     except Exception as e:
@@ -120,6 +145,10 @@ def simular_trayecto_automatico(
         with simulaciones_lock:
             simulaciones_activas.discard(material_id)
 
+
+# ==========================================
+# 1. ESQUEMAS PYDANTIC
+# ==========================================
 
 class MaterialCreate(BaseModel):
     id: str
@@ -140,11 +169,16 @@ class UsuarioSchema(BaseModel):
     password: str
 
 
+class RecuperarSchema(BaseModel):
+    correo: str
+    password_actual: str
+    nueva_password: str
+
+
 class ChatbotQuery(BaseModel):
     message: str
 
 
-# --- Esquemas de Clientes, Conductores, Rutas y Asignaciones ---
 class ClienteCreate(BaseModel):
     nombre: str
     empresa: Optional[str] = None
@@ -178,8 +212,9 @@ class AsignarEnvio(BaseModel):
 
 
 # ==========================================
-# AUTENTICACIÓN
+# 2. AUTENTICACIÓN SEGURA (BCRYPT)
 # ==========================================
+
 @app.post("/auth/register")
 def registrar_usuario(datos: UsuarioSchema, db: Session = Depends(get_db)):
     try:
@@ -193,10 +228,14 @@ def registrar_usuario(datos: UsuarioSchema, db: Session = Depends(get_db)):
             )
 
         nombre_defecto = datos.correo.split("@")[0].capitalize()
+        
+        # Encriptar la contraseña con Bcrypt
+        password_hashed = obtener_password_hash(datos.password)
+        
         nuevo_usuario = models.Usuario(
             nombre=nombre_defecto,
             correo=datos.correo,
-            password=datos.password,
+            password=password_hashed,
             rol="Operador"
         )
         db.add(nuevo_usuario)
@@ -212,30 +251,37 @@ def registrar_usuario(datos: UsuarioSchema, db: Session = Depends(get_db)):
 @app.post("/auth/login")
 def login(datos: UsuarioSchema, db: Session = Depends(get_db)):
     usr = db.query(models.Usuario).filter(
-        models.Usuario.correo == datos.correo,
-        models.Usuario.password == datos.password
+        models.Usuario.correo == datos.correo
     ).first()
-    if not usr:
+    
+    # Verificación segura con hash
+    if not usr or not verificar_password(datos.password, usr.password):
         raise HTTPException(status_code=401, detail="Credenciales incorrectas.")
+        
     return {"mensaje": "Inicio de sesión exitoso", "correo": usr.correo}
 
 
 @app.post("/auth/recuperar")
-def recuperar_password(datos: UsuarioSchema, db: Session = Depends(get_db)):
+def recuperar_password(datos: RecuperarSchema, db: Session = Depends(get_db)):
     usr = db.query(models.Usuario).filter(
         models.Usuario.correo == datos.correo
     ).first()
     if not usr:
         raise HTTPException(status_code=404, detail="El correo no se encuentra registrado.")
 
-    usr.password = datos.password
+    # Validar password anterior antes de autorizar el cambio
+    if not verificar_password(datos.password_actual, usr.password):
+        raise HTTPException(status_code=401, detail="La contraseña actual es incorrecta.")
+
+    usr.password = obtener_password_hash(datos.nueva_password)
     db.commit()
     return {"mensaje": "Contraseña actualizada exitosamente."}
 
 
 # ==========================================
-# MATERIALES Y TRAZABILIDAD
+# 3. MATERIALES Y TRAZABILIDAD
 # ==========================================
+
 @app.post("/materiales/", status_code=201)
 def registrar_material(material: MaterialCreate, db: Session = Depends(get_db)):
     existe = db.query(models.Material).filter(
@@ -248,9 +294,8 @@ def registrar_material(material: MaterialCreate, db: Session = Depends(get_db)):
     cliente_obj = db.query(models.Cliente).filter(
         models.Cliente.nombre == nombre_cliente
     ).first()
-
+    
     if not cliente_obj:
-        # Se crean solo campos presentes en el esquema conocido de Cliente.
         cliente_obj = models.Cliente(nombre=nombre_cliente)
         db.add(cliente_obj)
         db.flush()
@@ -274,7 +319,6 @@ def registrar_material(material: MaterialCreate, db: Session = Depends(get_db)):
 
     db.commit()
     db.refresh(nuevo_mat)
-    # La simulación NO se inicia aquí: comienza al asignar conductor y ruta.
     return nuevo_mat
 
 
@@ -369,7 +413,9 @@ def obtener_guia_material(material_id: str, db: Session = Depends(get_db)):
     }
 
 
-# CHATBOT INTELIGENTE (GEMINI)
+# ==========================================
+# 4. CHATBOT INTELIGENTE (GEMINI)
+# ==========================================
 
 @app.post("/chatbot")
 def responder_chatbot(request: dict, db: Session = Depends(get_db)):
@@ -432,8 +478,9 @@ Pregunta del usuario: {pregunta_usuario}
 
 
 # ==========================================
-# CLIENTES
+# 5. CLIENTES
 # ==========================================
+
 @app.get("/clientes")
 def obtener_clientes(db: Session = Depends(get_db)):
     return db.query(models.Cliente).all()
@@ -449,8 +496,9 @@ def crear_cliente(cliente: ClienteCreate, db: Session = Depends(get_db)):
 
 
 # ==========================================
-# CONDUCTORES
+# 6. CONDUCTORES
 # ==========================================
+
 @app.get("/conductores")
 def obtener_conductores(db: Session = Depends(get_db)):
     return db.query(models.Conductor).all()
@@ -466,8 +514,9 @@ def crear_conductor(conductor: ConductorCreate, db: Session = Depends(get_db)):
 
 
 # ==========================================
-# RUTAS
+# 7. RUTAS
 # ==========================================
+
 @app.get("/rutas")
 def obtener_rutas(db: Session = Depends(get_db)):
     return db.query(models.Ruta).all()
@@ -483,8 +532,9 @@ def crear_ruta(ruta: RutaCreate, db: Session = Depends(get_db)):
 
 
 # ==========================================
-# ASIGNACIÓN DE ENVÍOS
+# 8. ASIGNACIÓN DE ENVÍOS
 # ==========================================
+
 @app.post("/envios/asignar")
 def asignar_datos_envio(datos: AsignarEnvio, db: Session = Depends(get_db)):
     material = db.query(models.Material).filter(
@@ -506,10 +556,8 @@ def asignar_datos_envio(datos: AsignarEnvio, db: Session = Depends(get_db)):
     conductor = db.query(models.Conductor).filter(
         models.Conductor.nombre == conductor_nombre
     ).first()
-
+    
     if not conductor:
-        # Los campos licencia/vehículo pueden depender del modelo.
-        # Solo se asigna el nombre para evitar inventar datos.
         conductor = models.Conductor(nombre=conductor_nombre)
         db.add(conductor)
         db.flush()
@@ -519,7 +567,6 @@ def asignar_datos_envio(datos: AsignarEnvio, db: Session = Depends(get_db)):
     ).first()
 
     if not ruta:
-        # Completar campos requeridos según RutaCreate.
         ruta = models.Ruta(
             nombre_ruta=f"Ruta hacia {destino}",
             origen="Ciudad de México",
@@ -615,32 +662,65 @@ def obtener_detalle_envio(material_id: str, db: Session = Depends(get_db)):
 
 @app.get("/materiales/{material_id}/analisis-ia")
 def obtener_analisis_ia_material(material_id: str, db: Session = Depends(get_db)):
-    material = db.query(models.Material).filter(
-        models.Material.id == material_id
-    ).first()
+    material = db.query(models.Material).filter(models.Material.id == material_id).first()
     if not material:
         raise HTTPException(status_code=404, detail="El material no existe.")
 
-    cliente_nom = "Cliente General"
-    if getattr(material, "cliente_rel", None):
-        cliente_nom = material.cliente_rel.nombre
-    elif getattr(material, "cliente", None):
-        cliente_nom = material.cliente
+    # Consultar historial real de eventos del material
+    historial = db.query(models.HistorialTrazabilidad).filter(
+        models.HistorialTrazabilidad.material_id == material_id
+    ).all()
+
+    conteo_puntos = len(historial)
+    
+    # Contar cuántos checkpoints reales tienen incidencia de "Retraso" o "Alerta"
+    checkpoints_retrasados = sum(
+        1 for h in historial 
+        if h.estado and ("retrasado" in h.estado.lower() or "alerta" in h.estado.lower())
+    )
+
+    estado_actual = (material.estado or "").lower()
+
+    # Obtener datos de la ruta asignada (si tiene relación)
+    tiempo_estimado_str = "N/A"
+    distancia_km = 0
+    if getattr(material, "ruta_rel", None):
+        tiempo_estimado_str = material.ruta_rel.tiempo_estimado or "N/A"
+        distancia_km = material.ruta_rel.distancia_km or 0
+
+    # Lógica inteligente basada en métricas reales de la BD
+    if checkpoints_retrasados > 0 or "retrasado" in estado_actual:
+        nivel_riesgo = "Alto"
+        porcentaje_confianza_o_riesgo = min(95.0, 70.0 + (checkpoints_retrasados * 10.0))
+        diagnostico = f"Se detectaron {checkpoints_retrasados} checkpoints con retraso sobre un total de {conteo_puntos} registros. El trayecto presenta desviaciones respecto al tiempo estimado ({tiempo_estimado_str})."
+        recomendacion = "Contactar al operador logístico inmediatamente para reprogramar la ruta."
+    elif "entregado" in estado_actual:
+        nivel_riesgo = "Bajo"
+        porcentaje_confianza_o_riesgo = 100.0
+        diagnostico = f"Envío completado exitosamente. Se validaron {conteo_puntos} puntos de control sin incidencias críticas."
+        recomendacion = "Archivar guía de despacho y cerrar ciclo operativo."
+    else:
+        if conteo_puntos > 2:
+            nivel_riesgo = "Medio"
+            porcentaje_confianza_o_riesgo = 45.0
+            diagnostico = f"El paquete acumula {conteo_puntos} checkpoints en tránsito normal ({distancia_km} km recorridos). Se sugiere supervisión preventiva."
+            recomendacion = "Monitorear llegada al próximo punto de control."
+        else:
+            nivel_riesgo = "Bajo"
+            porcentaje_confianza_o_riesgo = 15.0
+            diagnostico = f"Inicia la trazabilidad del material. {conteo_puntos} checkpoints iniciales registrados."
+            recomendacion = "Tránsito estándar dentro de los parámetros esperados."
 
     return {
         "material_id": material.id,
         "nombre": material.nombre,
-        "cliente": cliente_nom,
         "estado": material.estado,
         "ubicacion": material.ubicacion_actual,
-        "diagnostico_ia": (
-            f"El paquete {material.id} ({material.nombre}) asignado a {cliente_nom} "
-            f"se encuentra en estado '{material.estado}'. "
-            "Este diagnóstico se basa en los datos registrados en el sistema."
-        ),
-        "nivel_riesgo": (
-            "Bajo" if "Entregado" in (material.estado or "")
-            or "Almacén" in (material.estado or "")
-            else "Medio"
-        )
+        "nivel_riesgo": nivel_riesgo,
+        "porcentaje_evaluado": round(porcentaje_confianza_o_riesgo, 1),
+        "checkpoints_totales": conteo_puntos,
+        "checkpoints_retrasados": checkpoints_retrasados,
+        "tiempo_estimado_ruta": tiempo_estimado_str,
+        "diagnostico_ia": diagnostico,
+        "recomendacion": recomendacion
     }

@@ -16,7 +16,8 @@ class Cliente(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String, index=True)
-    email = Column(String, nullable=True)
+    empresa = Column(String, nullable=True)  
+    email = Column(String, unique=True, index=True)
     telefono = Column(String, nullable=True)
     direccion_entrega = Column(String, nullable=True)
     calificacion = Column(Float, default=5.0)
@@ -35,7 +36,7 @@ class Conductor(Base):
     vehiculo_asignado = Column(String, nullable=True)
     estado = Column(String, default="Disponible")
     disponible = Column(Boolean, default=True)
-    calificacion = Column(Float, default=5.0)  # <-- Asegúrate de incluir esta columna
+    calificacion = Column(Float, default=5.0)  
 
     materiales = relationship("Material", back_populates="conductor_rel")
 
@@ -49,7 +50,7 @@ class Ruta(Base):
     destino = Column(String, index=True)
     tiempo_estimado = Column(String, nullable=True)
     distancia_km = Column(String, nullable=True)
-    calificacion_seguridad = Column(Float, default=5.0)  # <-- AGREGA ESTA LÍNEA
+    calificacion_seguridad = Column(Float, default=5.0)  
 
     materiales = relationship("Material", back_populates="ruta_rel")
     
