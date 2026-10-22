@@ -32,13 +32,20 @@ Permite relacionar paquetes con clientes, conductores y rutas de transporte, reg
 
 ---
 
-### 1. Configuración del Backend (FastAPI)
+### 1. Configuración del Backend y Frontend
 
 1. Abre una terminal y navega a la carpeta del backend:
    ```powershell
-   cd trazabilidad-backend
+     cd trazabilidad-backend
+    .\venv\Scripts\activate
+     uvicorn main:app --reload
 
 
+### 2. Configuración del Frontend
+Abre una terminal nueva y navega a la carpeta del Frontend
+
+    cd trazabilidad-frontend
+    npm run dev
 
    ## Acceso al Sistema
 

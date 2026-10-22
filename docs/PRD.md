@@ -49,13 +49,10 @@ Transformar la gestión de inventarios y envíos dentro de la cadena de suminist
 * **Registro atómico de paquetes e insumos:** Ingesta de materiales (`MAT-XXX`) asociando el cliente destinatario, ubicación inicial y soporte para etiquetado con Códigos QR y lecturas RFID.
 * **Asignación logística relacional (Outbound):** Vinculación dinámica entre el paquete, el cliente receptor, el conductor designado y la ruta de transporte, cambiando el estado operativo a *"En Tránsito"*.
 * **Bitácora inmutable de checkpoints (Escaneo y Seguimiento):** Actualización de ubicaciones en tiempo real y estados logísticos (*En Regla/Tránsito, Retrasado, Entregado*) con registro histórico de fechas, horas y motivos de retraso.
-* **Monitoreo Geográfico e Itinerario de Ruta Interactivo:** Visualización en mapa interactivo (basado en Leaflet.js / OpenStreetMap) y línea de tiempo (*Timeline*) que proyecta gráficamente los puntos de origen, tramos en tránsito, *checkpoints* intermedios y destino final de los envíos.
-* **Asistente conversacional RAG (Chatbot Logístico):** Chat flotante e interactivo impulsado por **Google Gemini** (`gemini-3.6-flash`) que inyecta el contexto en vivo de SQLite para responder preguntas sobre la ubicación de envíos o conceptos teóricos de logística (Incoterms, aduanas).
 * **Diagnóstico preventivo con IA:** Inferencia automática sobre los trayectos (`GET /materiales/{id}/analisis-ia`) para clasificar el nivel de riesgo en la entrega (*Alto, Medio, Bajo*) y detectar posibles anomalías antes de que afecten al cliente.
 * **Exportación de Guías de Trazabilidad:** Generación y descarga inmediata del reporte oficial de ruta en formato PDF de alta calidad mediante `html2pdf.js` desde el navegador web.
 
 ### 3.2. Fuera de Alcance (Out of Scope)
-* **Telemetría GPS por Satélite en Tiempo Real:** Hardware IoT integrado en vehículos para rastreo geográfico continuo sin intervención humana (en esta fase la ubicación se actualiza por escaneo en *checkpoints*).
 * **Migración a PostgreSQL en la nube:** Despliegue en base de datos distribuida (previsto para la Fase 2 de escalabilidad).
 * **Notificaciones Push y SMS Automatizados:** Envío automático de alertas SMS o mensajes de WhatsApp al destinatario ante cambios de estado.
 * **Aplicaciones Móviles Nativas:** Módulos descargables para iOS o Android (el sistema actual opera como una aplicación web responsiva accesible desde cualquier navegador móvil).
@@ -64,39 +61,29 @@ Transformar la gestión de inventarios y envíos dentro de la cadena de suminist
 
 ## 4. Historias de Usuario y Requisitos Funcionales
 
-* **US-01 (Registro de Paquetes - Prioridad Alta):**
-  * **Historia:** Como Operador de Almacén, quiero registrar un nuevo paquete con su cliente y ubicación para asignarle una guía única.
-  * **Criterios de Aceptación:** Debe guardar en la BD el ID de paquete (`MAT-XXX`), nombre, `cliente_id`, ubicación inicial y estado (*"En almacén"*).
+- **US-01 (Registro de Paquetes - Prioridad Alta):**
+  - **Historia:** Como Operador de Almacén, quiero registrar un nuevo paquete con su cliente y ubicación para asignarle una guía única.
+  - **Criterios de Aceptación:** Debe guardar en la BD el ID de paquete, nombre, cliente, ubicación inicial y estado (*"En almacén"*).
 
-* **US-02 (Escaneo de Checkpoints - Prioridad Alta):**
-  * **Historia:** Como Coordinador de Logística, quiero actualizar la ubicación y estado de un paquete mediante la API para reflejar su avance.
-  * **Criterios de Aceptación:** Endpoint `PUT /materiales/{id}/escanear` actualiza los campos `ubicacion_actual` y `estado` en SQLite en tiempo real.
+- **US-02 (Escaneo de Checkpoints - Prioridad Alta):**
+  - **Historia:** Como Coordinador de Logística, quiero actualizar la ubicación y estado de un paquete para reflejar su avance.
+  - **Criterios de Aceptación:** Endpoint `PUT /materiales/{id}/escanear` actualiza `ubicacion_actual`, `estado` e inserta el evento en el historial.
 
-* **US-03 (Consulta RAG de Envíos - Prioridad Alta):**
-  * **Historia:** Como Usuario, quiero consultar a través del Chatbot el estado en vivo de un paquete para saber dónde se encuentra sin buscar manualmente.
-  * **Criterios de Aceptación:** El chatbot consulta los registros activos en la BD SQLite y responde con el ID, cliente, ubicación y estado en lenguaje natural.
+- **US-03 (Consulta RAG de Envíos con IA - Prioridad Alta):**
+  - **Historia:** Como Usuario, quiero consultar a través del Chatbot el estado en vivo de un paquete para conocer su avance en lenguaje natural.
+  - **Criterios de Aceptación:** El chatbot consulta la base de datos y responde con el ID, cliente, ubicación y estado del paquete.
 
-* **US-04 (Consultas Teóricas Logísticas - Prioridad Alta):**
-  * **Historia:** Como Usuario, quiero consultar al Chatbot sobre conceptos de logística (ej. Incoterms DDP, FOB, despacho aduanero) para resolver dudas operativas.
-  * **Criterios de Aceptación:** El asistente Gemini debe responder de forma clara y profesional preguntas teóricas dentro del dominio de logística.
-
-* **US-05 (Filtro de Dominio en IA - Prioridad Alta):**
-  * **Historia:** Como Administrador, quiero que el Chatbot rechace preguntas ajenas a logística o al sistema para no malgastar recursos.
-  * **Criterios de Aceptación:** Si se consulta sobre temas no logísticos (recetas, deportes, etc.), debe responder: *"Solo puedo responder preguntas relacionadas con la logística y los envíos de PluriOne Trace."*
-
-* **US-06 (Tolerancia a Fallos en IA - Prioridad Media):**
-  * **Historia:** Como Sistema Backend, quiero manejar automáticamente errores 503 por alta demanda en la API de IA para garantizar que el usuario reciba respuesta sin interrupciones.
-  * **Criterios de Aceptación:** Implementar bucle de reintento con pausa corta al detectar código 503 antes de mostrar mensaje de fallback al usuario.
+- **US-04 (Tolerancia a Fallos en IA - Prioridad Media):**
+  - **Historia:** Como Sistema Backend, quiero manejar automáticamente errores transitorios (503) en la API de IA para garantizar disponibilidad.
+  - **Criterios de Aceptación:** Implementar reintentos en el backend al detectar códigos de error del servicio antes de devolver un mensaje de respaldo.
 
 ---
 
 ## 5. Requisitos No Funcionales
 
-* **Rendimiento:** Tiempos de respuesta de la API de FastAPI < 150 ms para operaciones CRUD. Tiempo de respuesta del chatbot con Gemini < 2.0 segundos.
-* **Tolerancia a Fallos y Manejo de Errores:** Bloques `try-except` defensivos que capturen fallos de autenticación (401), modelos no encontrados (404) y saturación del modelo (503), devolviendo JSON estructurado.
-* **Seguridad:** Aislamiento de credenciales mediante variables de entorno (`.env`) evitando exponer API keys públicas en el cliente.
-* **Compatibilidad:** Implementación con el SDK actualizado `google-genai` apuntando al modelo oficial vigente `gemini-3.6-flash`.
-* **Arquitectura:** Desacoplamiento estricto entre cliente SPA (React) y servidor (FastAPI + SQLAlchemy + Gemini API).
+- **Rendimiento:** Tiempos de respuesta de la API de FastAPI < 200 ms para operaciones CRUD.
+- **Seguridad:** Almacenamiento seguro de contraseñas con hash `bcrypt` y aislamiento de credenciales en archivo `.env`.
+- **Arquitectura:** Desacoplamiento entre cliente SPA (React + Vite) y servidor API REST (FastAPI + SQLAlchemy).
 
 ---
 
