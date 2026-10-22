@@ -10,18 +10,36 @@ load_dotenv()
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean, Text
 from pydantic import BaseModel
 from database import engine, Base, get_db
 import models
 
-# 1. Crear las tablas en la Base de Datos si no existen
+# --- INTEGRACIÓN CON ENCRIPTACIÓN (BCRYPT) ---
+from passlib.context import CryptContext
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def obtener_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
+
+def verificar_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
+
+
+# --- INTEGRACIÓN CON GEMINI ---
+from google import genai
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
+
+
+# 1. Crear las tablas en la Base de Datos
 Base.metadata.create_all(bind=engine)
 
-# 2. Inicializar la app de FastAPI
-app = FastAPI(title="PluriOne Trace API")
+# 2. Inicializar la app de FastAPI (Instancia Única)
+app = FastAPI(title="PluriOne Trace API", version="1.0")
 
-# 3. Configuración de CORS para permitir la conexión con React (puerto 5173)
+# 3. Configuración de CORS
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
@@ -35,25 +53,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- INTEGRACIÓN CON GEMINI ---
-from google import genai
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
-
-Base.metadata.create_all(bind=engine)
-
-app = FastAPI(title="API de Trazabilidad de Materiales", version="1.0")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
+# ==========================================
 # SIMULACIÓN AUTOMÁTICA DE TRAZABILIDAD
+# ==========================================
 
 SimulationSession = sessionmaker(
     autocommit=False,
@@ -96,7 +99,6 @@ def simular_trayecto_automatico(
                 print(f"Simulación cancelada: no existe el material {material_id}")
                 break
 
-            # No sobrescribir una actualización manual posterior a la asignación.
             if material.estado and "Cancelado" in material.estado:
                 print(f"Simulación cancelada para {material_id}.")
                 break
@@ -110,7 +112,6 @@ def simular_trayecto_automatico(
                 estado=estado
             ))
             db.commit()
-
             print(f"[PluriOne Trace] {material_id}: {ubicacion} - {estado}")
 
     except Exception as e:
@@ -121,6 +122,10 @@ def simular_trayecto_automatico(
         with simulaciones_lock:
             simulaciones_activas.discard(material_id)
 
+
+# ==========================================
+# 1. ESQUEMAS PYDANTIC
+# ==========================================
 
 class MaterialCreate(BaseModel):
     id: str
@@ -141,11 +146,16 @@ class UsuarioSchema(BaseModel):
     password: str
 
 
+class RecuperarSchema(BaseModel):
+    correo: str
+    password_actual: str
+    nueva_password: str
+
+
 class ChatbotQuery(BaseModel):
     message: str
 
 
-# --- Esquemas de Clientes, Conductores, Rutas y Asignaciones ---
 class ClienteCreate(BaseModel):
     nombre: str
     empresa: Optional[str] = None
@@ -179,8 +189,9 @@ class AsignarEnvio(BaseModel):
 
 
 # ==========================================
-# AUTENTICACIÓN
+# 2. AUTENTICACIÓN SEGURA (BCRYPT)
 # ==========================================
+
 @app.post("/auth/register")
 def registrar_usuario(datos: UsuarioSchema, db: Session = Depends(get_db)):
     try:
@@ -194,10 +205,14 @@ def registrar_usuario(datos: UsuarioSchema, db: Session = Depends(get_db)):
             )
 
         nombre_defecto = datos.correo.split("@")[0].capitalize()
+        
+        # Encriptar la contraseña con Bcrypt
+        password_hashed = obtener_password_hash(datos.password)
+        
         nuevo_usuario = models.Usuario(
             nombre=nombre_defecto,
             correo=datos.correo,
-            password=datos.password,
+            password=password_hashed,
             rol="Operador"
         )
         db.add(nuevo_usuario)
@@ -213,30 +228,37 @@ def registrar_usuario(datos: UsuarioSchema, db: Session = Depends(get_db)):
 @app.post("/auth/login")
 def login(datos: UsuarioSchema, db: Session = Depends(get_db)):
     usr = db.query(models.Usuario).filter(
-        models.Usuario.correo == datos.correo,
-        models.Usuario.password == datos.password
+        models.Usuario.correo == datos.correo
     ).first()
-    if not usr:
+    
+    # Verificación segura con hash
+    if not usr or not verificar_password(datos.password, usr.password):
         raise HTTPException(status_code=401, detail="Credenciales incorrectas.")
+        
     return {"mensaje": "Inicio de sesión exitoso", "correo": usr.correo}
 
 
 @app.post("/auth/recuperar")
-def recuperar_password(datos: UsuarioSchema, db: Session = Depends(get_db)):
+def recuperar_password(datos: RecuperarSchema, db: Session = Depends(get_db)):
     usr = db.query(models.Usuario).filter(
         models.Usuario.correo == datos.correo
     ).first()
     if not usr:
         raise HTTPException(status_code=404, detail="El correo no se encuentra registrado.")
 
-    usr.password = datos.password
+    # Validar password anterior antes de autorizar el cambio
+    if not verificar_password(datos.password_actual, usr.password):
+        raise HTTPException(status_code=401, detail="La contraseña actual es incorrecta.")
+
+    usr.password = obtener_password_hash(datos.nueva_password)
     db.commit()
     return {"mensaje": "Contraseña actualizada exitosamente."}
 
 
 # ==========================================
-# MATERIALES Y TRAZABILIDAD
+# 3. MATERIALES Y TRAZABILIDAD
 # ==========================================
+
 @app.post("/materiales/", status_code=201)
 def registrar_material(material: MaterialCreate, db: Session = Depends(get_db)):
     existe = db.query(models.Material).filter(
@@ -249,9 +271,8 @@ def registrar_material(material: MaterialCreate, db: Session = Depends(get_db)):
     cliente_obj = db.query(models.Cliente).filter(
         models.Cliente.nombre == nombre_cliente
     ).first()
-
+    
     if not cliente_obj:
-        # Se crean solo campos presentes en el esquema conocido de Cliente.
         cliente_obj = models.Cliente(nombre=nombre_cliente)
         db.add(cliente_obj)
         db.flush()
@@ -275,7 +296,6 @@ def registrar_material(material: MaterialCreate, db: Session = Depends(get_db)):
 
     db.commit()
     db.refresh(nuevo_mat)
-    # La simulación NO se inicia aquí: comienza al asignar conductor y ruta.
     return nuevo_mat
 
 
@@ -370,7 +390,9 @@ def obtener_guia_material(material_id: str, db: Session = Depends(get_db)):
     }
 
 
-# CHATBOT INTELIGENTE (GEMINI)
+# ==========================================
+# 4. CHATBOT INTELIGENTE (GEMINI)
+# ==========================================
 
 @app.post("/chatbot")
 def responder_chatbot(request: dict, db: Session = Depends(get_db)):
@@ -433,8 +455,9 @@ Pregunta del usuario: {pregunta_usuario}
 
 
 # ==========================================
-# CLIENTES
+# 5. CLIENTES
 # ==========================================
+
 @app.get("/clientes")
 def obtener_clientes(db: Session = Depends(get_db)):
     return db.query(models.Cliente).all()
@@ -450,8 +473,9 @@ def crear_cliente(cliente: ClienteCreate, db: Session = Depends(get_db)):
 
 
 # ==========================================
-# CONDUCTORES
+# 6. CONDUCTORES
 # ==========================================
+
 @app.get("/conductores")
 def obtener_conductores(db: Session = Depends(get_db)):
     return db.query(models.Conductor).all()
@@ -467,8 +491,9 @@ def crear_conductor(conductor: ConductorCreate, db: Session = Depends(get_db)):
 
 
 # ==========================================
-# RUTAS
+# 7. RUTAS
 # ==========================================
+
 @app.get("/rutas")
 def obtener_rutas(db: Session = Depends(get_db)):
     return db.query(models.Ruta).all()
@@ -484,8 +509,9 @@ def crear_ruta(ruta: RutaCreate, db: Session = Depends(get_db)):
 
 
 # ==========================================
-# ASIGNACIÓN DE ENVÍOS
+# 8. ASIGNACIÓN DE ENVÍOS
 # ==========================================
+
 @app.post("/envios/asignar")
 def asignar_datos_envio(datos: AsignarEnvio, db: Session = Depends(get_db)):
     material = db.query(models.Material).filter(
@@ -507,10 +533,8 @@ def asignar_datos_envio(datos: AsignarEnvio, db: Session = Depends(get_db)):
     conductor = db.query(models.Conductor).filter(
         models.Conductor.nombre == conductor_nombre
     ).first()
-
+    
     if not conductor:
-        # Los campos licencia/vehículo pueden depender del modelo.
-        # Solo se asigna el nombre para evitar inventar datos.
         conductor = models.Conductor(nombre=conductor_nombre)
         db.add(conductor)
         db.flush()
@@ -520,7 +544,6 @@ def asignar_datos_envio(datos: AsignarEnvio, db: Session = Depends(get_db)):
     ).first()
 
     if not ruta:
-        # Completar campos requeridos según RutaCreate.
         ruta = models.Ruta(
             nombre_ruta=f"Ruta hacia {destino}",
             origen="Ciudad de México",
@@ -645,4 +668,3 @@ def obtener_analisis_ia_material(material_id: str, db: Session = Depends(get_db)
             else "Medio"
         )
     }
-
