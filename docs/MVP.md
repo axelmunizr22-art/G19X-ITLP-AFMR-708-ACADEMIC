@@ -4,17 +4,6 @@
 **Fecha:** Octubre 2026
 
 
-## 1. Visión general
-
-El proyecto consistirá en el desarrollo de una aplicación web orientada al registro, seguimiento y consulta de materiales dentro de un proceso logístico. Su objetivo principal será centralizar la información de los paquetes, relacionándolos con sus respectivos clientes, conductores y rutas, además de registrar eventos de trazabilidad y facilitar la consulta de su estado en tiempo real mediante una interfaz web intuitiva.
-
-El sistema se basará en una arquitectura cliente-servidor: el frontend se desarrollará con React y se comunicará vía HTTP con una API REST construida en FastAPI. La persistencia de datos se contempla realizar mediante una base de datos SQLite utilizando el ORM SQLAlchemy. Asimismo, el backend se conectará con Google Gemini para habilitar un asistente conversacional capaz de responder consultas con el contexto de los materiales registrados.
-
-La propuesta incluye la construcción del frontend con React/Vite y el backend con FastAPI. De igual manera, se contempla el desarrollo de un simulador de recorrido que enviará actualizaciones periódicas de estado a la API para representar los eventos de control a lo largo del trayecto de un envío.
-
-> **Nota de alcance:** Este documento plantea la planificación técnica y el alcance proyectado para la fase inicial del desarrollo. En aquellos casos donde se requieran simulaciones o componentes en etapas de prueba, se indicará expresamente como parte de la estrategia de implementación gradual.
-
----
 
 ## 2. Problemática
 

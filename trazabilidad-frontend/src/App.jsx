@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import html2pdf from 'html2pdf.js';
+import { QRCodeCanvas } from 'qrcode.react';
 
 const API_URL = 'http://localhost:8000';
 
@@ -573,38 +574,71 @@ export default function App() {
                           <strong>{guiaSeleccionada.cliente}</strong>
                         </div>
                       </div>
-                      {analisisIA && (
-  <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mt-4 shadow-sm">
-    <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-      🤖 Diagnóstico Inteligente de Riesgo (IA)
-    </h3>
-    <div className="grid grid-cols-2 gap-4 mt-3 text-sm">
-      <div>
-        <p className="text-slate-500">Nivel de Riesgo:</p>
-        <p className={`font-semibold text-base ${
-          analisisIA.nivel_riesgo === 'Alto' ? 'text-red-600' :
-          analisisIA.nivel_riesgo === 'Medio' ? 'text-amber-600' : 'text-emerald-600'
-        }`}>
-          {analisisIA.nivel_riesgo} ({analisisIA.porcentaje_evaluado}%)
-        </p>
+                      {/* Diagnóstico Inteligente de Riesgo (IA) - Estilo Ejecutivo */}
+{analisisIA && (
+  <div style={{ marginTop: '20px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+    
+    {/* Encabezado */}
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
+      <span style={{ fontSize: '18px' }}>🤖</span>
+      <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '700', color: '#0f172a' }}>
+        Diagnóstico Inteligente de Riesgo (IA)
+      </h3>
+    </div>
+
+    {/* Tarjetas de métricas en dos columnas */}
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+      
+      {/* Tarjeta Nivel de Riesgo */}
+      <div style={{ backgroundColor: '#ffffff', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+        <span style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', display: 'block', textTransform: 'uppercase', marginBottom: '4px' }}>Nivel de Riesgo</span>
+        <span style={{ fontSize: '14px', fontWeight: '800', color: analisisIA.nivel_riesgo === 'Alto' ? '#dc2626' : analisisIA.nivel_riesgo === 'Medio' ? '#d97706' : '#16a34a' }}>
+          {analisisIA.nivel_riesgo} ({analisisIA.indice_confiabilidad || '15'}%)
+        </span>
       </div>
-      <div>
-        <p className="text-slate-500">Checkpoints con Retraso:</p>
-        <p className="font-semibold text-slate-800 text-base">
-          {analisisIA.checkpoints_retrasados} de {analisisIA.checkpoints_totales} registrados
-        </p>
+
+      {/* Tarjeta Checkpoints */}
+      <div style={{ backgroundColor: '#ffffff', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+        <span style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', display: 'block', textTransform: 'uppercase', marginBottom: '4px' }}>Checkpoints con Retraso</span>
+        <span style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a' }}>
+          {analisisIA.incidentes_registrados || 0} de {analisisIA.total_checkpoints || 1} registrados
+        </span>
+      </div>
+
+    </div>
+
+    {/* Bloques de Texto Descriptivo */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px' }}>
+      <div style={{ backgroundColor: '#ffffff', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+        <strong style={{ color: '#475569', display: 'block', marginBottom: '2px', fontSize: '11px' }}>DIAGNÓSTICO DEL TRAYECTO:</strong>
+        <span style={{ color: '#0f172a', lineHeight: '1.4' }}>{analisisIA.diagnostico_ia || analisisIA.diagnostico}</span>
+      </div>
+
+      <div style={{ backgroundColor: '#eff6ff', padding: '10px 12px', borderRadius: '6px', border: '1px solid #bfdbfe' }}>
+        <strong style={{ color: '#1d4ed8', display: 'block', marginBottom: '2px', fontSize: '11px' }}>RECOMENDACIÓN OPERATIVA:</strong>
+        <span style={{ color: '#1e3a8a', lineHeight: '1.4' }}>{analisisIA.recomendacion || "Tránsito estándar dentro de los parámetros esperados por el sistema."}</span>
       </div>
     </div>
-    <div className="mt-3 text-sm">
-      <p className="text-slate-500">Diagnóstico del Trayecto:</p>
-      <p className="text-slate-700 font-medium">{analisisIA.diagnostico_ia}</p>
-    </div>
-    <div className="mt-2 text-sm">
-      <p className="text-slate-500">Recomendación Operativa:</p>
-      <p className="text-indigo-700 font-medium">{analisisIA.recomendacion}</p>
-    </div>
+
   </div>
 )}
+
+  {/* Componente QR en Imagen PNG (Compatible 100% con PDF) */}
+<div style={{ margin: '16px auto', textAlign: 'center', backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1', maxWidth: '200px' }}>
+  <p style={{ fontSize: '11px', fontWeight: 'bold', color: '#0284c7', marginBottom: '8px', textTransform: 'uppercase' }}>QR de Verificación</p>
+  <div style={{ display: 'inline-block', background: '#fff', padding: '8px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+    <img 
+      src={`https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encodeURIComponent(guiaSeleccionada?.id || 'PLURIONE-TRACE-DEFAULT')}`} 
+      alt="Código QR de Verificación"
+      style={{ width: '110px', height: '110px', display: 'block', margin: '0 auto' }}
+    />
+  </div>
+  <p style={{ fontSize: '10px', color: '#64748b', marginTop: '6px', wordBreak: 'break-all', fontWeight: 'bold' }}>
+    ID: {guiaSeleccionada?.id || 'N/A'}
+  </p>
+</div>
+
+
                       <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#0f172a', textTransform: 'uppercase', borderBottom: '1px solid #cbd5e1', paddingBottom: '4px' }}>
                         Historial de Puntos de Control y Escaneos
                       </h4>
