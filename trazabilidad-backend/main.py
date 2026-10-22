@@ -639,32 +639,65 @@ def obtener_detalle_envio(material_id: str, db: Session = Depends(get_db)):
 
 @app.get("/materiales/{material_id}/analisis-ia")
 def obtener_analisis_ia_material(material_id: str, db: Session = Depends(get_db)):
-    material = db.query(models.Material).filter(
-        models.Material.id == material_id
-    ).first()
+    material = db.query(models.Material).filter(models.Material.id == material_id).first()
     if not material:
         raise HTTPException(status_code=404, detail="El material no existe.")
 
-    cliente_nom = "Cliente General"
-    if getattr(material, "cliente_rel", None):
-        cliente_nom = material.cliente_rel.nombre
-    elif getattr(material, "cliente", None):
-        cliente_nom = material.cliente
+    # Consultar historial real de eventos del material
+    historial = db.query(models.HistorialTrazabilidad).filter(
+        models.HistorialTrazabilidad.material_id == material_id
+    ).all()
+
+    conteo_puntos = len(historial)
+    
+    # Contar cuántos checkpoints reales tienen incidencia de "Retraso" o "Alerta"
+    checkpoints_retrasados = sum(
+        1 for h in historial 
+        if h.estado and ("retrasado" in h.estado.lower() or "alerta" in h.estado.lower())
+    )
+
+    estado_actual = (material.estado or "").lower()
+
+    # Obtener datos de la ruta asignada (si tiene relación)
+    tiempo_estimado_str = "N/A"
+    distancia_km = 0
+    if getattr(material, "ruta_rel", None):
+        tiempo_estimado_str = material.ruta_rel.tiempo_estimado or "N/A"
+        distancia_km = material.ruta_rel.distancia_km or 0
+
+    # Lógica inteligente basada en métricas reales de la BD
+    if checkpoints_retrasados > 0 or "retrasado" in estado_actual:
+        nivel_riesgo = "Alto"
+        porcentaje_confianza_o_riesgo = min(95.0, 70.0 + (checkpoints_retrasados * 10.0))
+        diagnostico = f"Se detectaron {checkpoints_retrasados} checkpoints con retraso sobre un total de {conteo_puntos} registros. El trayecto presenta desviaciones respecto al tiempo estimado ({tiempo_estimado_str})."
+        recomendacion = "Contactar al operador logístico inmediatamente para reprogramar la ruta."
+    elif "entregado" in estado_actual:
+        nivel_riesgo = "Bajo"
+        porcentaje_confianza_o_riesgo = 100.0
+        diagnostico = f"Envío completado exitosamente. Se validaron {conteo_puntos} puntos de control sin incidencias críticas."
+        recomendacion = "Archivar guía de despacho y cerrar ciclo operativo."
+    else:
+        if conteo_puntos > 2:
+            nivel_riesgo = "Medio"
+            porcentaje_confianza_o_riesgo = 45.0
+            diagnostico = f"El paquete acumula {conteo_puntos} checkpoints en tránsito normal ({distancia_km} km recorridos). Se sugiere supervisión preventiva."
+            recomendacion = "Monitorear llegada al próximo punto de control."
+        else:
+            nivel_riesgo = "Bajo"
+            porcentaje_confianza_o_riesgo = 15.0
+            diagnostico = f"Inicia la trazabilidad del material. {conteo_puntos} checkpoints iniciales registrados."
+            recomendacion = "Tránsito estándar dentro de los parámetros esperados."
 
     return {
         "material_id": material.id,
         "nombre": material.nombre,
-        "cliente": cliente_nom,
         "estado": material.estado,
         "ubicacion": material.ubicacion_actual,
-        "diagnostico_ia": (
-            f"El paquete {material.id} ({material.nombre}) asignado a {cliente_nom} "
-            f"se encuentra en estado '{material.estado}'. "
-            "Este diagnóstico se basa en los datos registrados en el sistema."
-        ),
-        "nivel_riesgo": (
-            "Bajo" if "Entregado" in (material.estado or "")
-            or "Almacén" in (material.estado or "")
-            else "Medio"
-        )
+        "nivel_riesgo": nivel_riesgo,
+        "porcentaje_evaluado": round(porcentaje_confianza_o_riesgo, 1),
+        "checkpoints_totales": conteo_puntos,
+        "checkpoints_retrasados": checkpoints_retrasados,
+        "tiempo_estimado_ruta": tiempo_estimado_str,
+        "diagnostico_ia": diagnostico,
+        "recomendacion": recomendacion
     }
