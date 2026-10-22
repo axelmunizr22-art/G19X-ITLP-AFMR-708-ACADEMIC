@@ -616,34 +616,23 @@ export default function App() {
                             <th style={{ padding: '6px 8px', borderBottom: '1px solid #cbd5e1' }}>Estado Registrado</th>
                           </tr>
                         </thead>
-                        <tbody>
-                          {(guiaSeleccionada?.historial_trayecto || guiaSeleccionada?.historial || []).map((h, index) => {
-  // Captura el destino real del paquete o usa la ruta actual asignada
-  const destinoReal = formAsignacion.ruta_destino || guiaSeleccionada.destino || guiaSeleccionada.ciudad || 'La Piedad';
-
-  // Reemplaza "Calcetines" o "Chamarras" por la ciudad destino en tiempo de renderizado
-  let ubicacionLimpia = h.ubicacion || '';
-  if (ubicacionLimpia.includes('Calcetines')) {
-    ubicacionLimpia = ubicacionLimpia.replace(/Calcetines/g, destinoReal);
-  } else if (ubicacionLimpia.includes('Chamarras')) {
-    ubicacionLimpia = ubicacionLimpia.replace(/Chamarras/g, destinoReal);
-  }
-
-  return (
-    <tr key={h.id || index} style={{ borderBottom: '1px solid #f1f5f9' }}>
-      <td style={{ padding: '6px 8px', color: '#334155' }}>
-        {h.fecha_hora?.replace('T', ' ').slice(0, 16) || 'N/A'}
-      </td>
-      <td style={{ padding: '6px 8px', fontWeight: '600', color: '#0f172a' }}>
-        {ubicacionLimpia}
-      </td>
-      <td style={{ padding: '6px 8px', color: h.estado?.includes('Retrasado') ? '#dc2626' : '#0284c7' }}>
-        {h.estado}
-      </td>
-    </tr>
-  );
-})}
-                        </tbody>
+                        <tbody style={{ fontSize: '13px' }}>
+  {(guiaSeleccionada?.historial_trayecto || guiaSeleccionada?.historial || []).map((h, index) => {
+    return (
+      <tr key={h.id || index} style={{ borderBottom: '1px solid #f1f5f9' }}>
+        <td style={{ padding: '6px 8px', color: '#334155' }}>
+          {h.fecha_hora?.replace('T', ' ').slice(0, 16) || 'N/A'}
+        </td>
+        <td style={{ padding: '6px 8px', fontWeight: '600', color: '#0f172a' }}>
+          {h.ubicacion || 'N/A'}
+        </td>
+        <td style={{ padding: '6px 8px', color: h.estado?.includes('Retrasado') ? '#dc2626' : '#0284c7' }}>
+          {h.estado}
+        </td>
+      </tr>
+    );
+  })}
+</tbody>
                       </table>
                     </div>
                   </div>
