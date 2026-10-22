@@ -35,6 +35,29 @@ client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 
 # 1. Crear las tablas en la Base de Datos
 Base.metadata.create_all(bind=engine)
+# --- CREAR USUARIO DE PRUEBA AUTOMÁTICO ---
+from database import SessionLocal
+import models
+
+def seed_usuario():
+    db = SessionLocal()
+    try:
+        existe = db.query(models.Usuario).filter(models.Usuario.correo == "admin@plurione.com").first()
+        if not existe:
+            nuevo = models.Usuario(
+                correo="admin@plurione.com",
+                password=obtener_password_hash("admin123"),
+                nombre="Administrador",
+                rol="Admin"
+            )
+            db.add(nuevo)
+            db.commit()
+    except Exception as e:
+        print("Seed error:", e)
+    finally:
+        db.close()
+
+seed_usuario()
 
 # 2. Inicializar la app de FastAPI (Instancia Única)
 app = FastAPI(title="PluriOne Trace API", version="1.0")
