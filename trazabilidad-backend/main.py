@@ -10,6 +10,7 @@ load_dotenv()
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean, Text
 from pydantic import BaseModel
 from database import engine, Base, get_db
 import models
@@ -644,3 +645,4 @@ def obtener_analisis_ia_material(material_id: str, db: Session = Depends(get_db)
             else "Medio"
         )
     }
+

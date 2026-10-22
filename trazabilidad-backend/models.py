@@ -16,7 +16,8 @@ class Cliente(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String, index=True)
-    email = Column(String, nullable=True)
+    empresa = Column(String, nullable=True)  # <-- AGREGAR ESTA LÍNEA
+    email = Column(String, unique=True, index=True)
     telefono = Column(String, nullable=True)
     direccion_entrega = Column(String, nullable=True)
     calificacion = Column(Float, default=5.0)
