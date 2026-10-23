@@ -14,6 +14,42 @@ from pydantic import BaseModel
 from database import engine, Base, get_db
 import models
 
+from datetime import datetime, timedelta
+from jose import JWTError, jwt
+from fastapi.security import OAuth2PasswordBearer
+
+# Clave secreta para firmar los tokens (en producción iría en .env)
+SECRET_KEY = "clave_secreta_super_segura_para_residencias_2026"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+
+def crear_token_acceso(data: dict):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+def obtener_usuario_actual(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="No se pudo validar las credenciales",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        correo: str = payload.get("sub")
+        if correo is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    
+    usr = db.query(models.Usuario).filter(models.Usuario.correo == correo).first()
+    if usr is None:
+        raise credentials_exception
+    return usr
+
 # --- INTEGRACIÓN CON ENCRIPTACIÓN (BCRYPT) ---
 from passlib.context import CryptContext
 
@@ -250,16 +286,20 @@ def registrar_usuario(datos: UsuarioSchema, db: Session = Depends(get_db)):
 
 @app.post("/auth/login")
 def login(datos: UsuarioSchema, db: Session = Depends(get_db)):
-    usr = db.query(models.Usuario).filter(
-        models.Usuario.correo == datos.correo
-    ).first()
+    usr = db.query(models.Usuario).filter(models.Usuario.correo == datos.correo).first()
     
-    # Verificación segura con hash
     if not usr or not verificar_password(datos.password, usr.password):
         raise HTTPException(status_code=401, detail="Credenciales incorrectas.")
         
-    return {"mensaje": "Inicio de sesión exitoso", "correo": usr.correo}
-
+    # Generar el token JWT
+    access_token = crear_token_acceso(data={"sub": usr.correo})
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "mensaje": "Inicio de sesión exitoso",
+        "correo": usr.correo
+    }
 
 @app.post("/auth/recuperar")
 def recuperar_password(datos: RecuperarSchema, db: Session = Depends(get_db)):
@@ -352,7 +392,10 @@ def escanear_material(
 
 
 @app.get("/materiales/")
-def obtener_materiales(db: Session = Depends(get_db)):
+def obtener_materiales(
+    db: Session = Depends(get_db), 
+    usuario_actual: models.Usuario = Depends(obtener_usuario_actual)
+):
     materiales = db.query(models.Material).all()
     resultado = []
 
@@ -375,7 +418,11 @@ def obtener_materiales(db: Session = Depends(get_db)):
 
 
 @app.get("/materiales/{material_id}/guia")
-def obtener_guia_material(material_id: str, db: Session = Depends(get_db)):
+def obtener_guia_material(
+    material_id: str, 
+    db: Session = Depends(get_db), 
+    usuario_actual: models.Usuario = Depends(obtener_usuario_actual)
+):
     material = db.query(models.Material).filter(
         models.Material.id == material_id
     ).first()
@@ -418,7 +465,11 @@ def obtener_guia_material(material_id: str, db: Session = Depends(get_db)):
 # ==========================================
 
 @app.post("/chatbot")
-def responder_chatbot(request: dict, db: Session = Depends(get_db)):
+def responder_chatbot(
+    request: dict, 
+    db: Session = Depends(get_db),
+    usuario_actual: models.Usuario = Depends(obtener_usuario_actual)
+):
     pregunta_usuario = (request.get("message") or "").strip()
 
     materiales = db.query(models.Material).all()
@@ -482,7 +533,7 @@ Pregunta del usuario: {pregunta_usuario}
 # ==========================================
 
 @app.get("/clientes")
-def obtener_clientes(db: Session = Depends(get_db)):
+def obtener_clientes(db: Session = Depends(get_db), usuario_actual: models.Usuario = Depends(obtener_usuario_actual)):
     return db.query(models.Cliente).all()
 
 
@@ -500,7 +551,10 @@ def crear_cliente(cliente: ClienteCreate, db: Session = Depends(get_db)):
 # ==========================================
 
 @app.get("/conductores")
-def obtener_conductores(db: Session = Depends(get_db)):
+def obtener_conductores(
+    db: Session = Depends(get_db), 
+    usuario_actual: models.Usuario = Depends(obtener_usuario_actual)
+):
     return db.query(models.Conductor).all()
 
 
@@ -518,7 +572,10 @@ def crear_conductor(conductor: ConductorCreate, db: Session = Depends(get_db)):
 # ==========================================
 
 @app.get("/rutas")
-def obtener_rutas(db: Session = Depends(get_db)):
+def obtener_rutas(
+    db: Session = Depends(get_db), 
+    usuario_actual: models.Usuario = Depends(obtener_usuario_actual)
+):
     return db.query(models.Ruta).all()
 
 
@@ -625,7 +682,11 @@ def asignar_datos_envio(datos: AsignarEnvio, db: Session = Depends(get_db)):
 
 
 @app.get("/envios/{material_id}/detalle")
-def obtener_detalle_envio(material_id: str, db: Session = Depends(get_db)):
+def obtener_detalle_envio(
+    material_id: str, 
+    db: Session = Depends(get_db), 
+    usuario_actual: models.Usuario = Depends(obtener_usuario_actual)
+):
     m = db.query(models.Material).filter(
         models.Material.id == material_id
     ).first()
@@ -661,7 +722,11 @@ def obtener_detalle_envio(material_id: str, db: Session = Depends(get_db)):
 
 
 @app.get("/materiales/{material_id}/analisis-ia")
-def obtener_analisis_ia_material(material_id: str, db: Session = Depends(get_db)):
+def obtener_analisis_ia_material(
+    material_id: str, 
+    db: Session = Depends(get_db), 
+    usuario_actual: models.Usuario = Depends(obtener_usuario_actual)
+):
     material = db.query(models.Material).filter(models.Material.id == material_id).first()
     if not material:
         raise HTTPException(status_code=404, detail="El material no existe.")

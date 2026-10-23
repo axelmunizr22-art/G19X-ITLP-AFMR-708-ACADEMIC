@@ -37,11 +37,42 @@ G19X-ITLP-AFMR-708-ACADEMIC/
 ├── 📁 trazabilidad-backend/
 │   ├── 📄 .env
 │   ├── 📄 .env.example
+│   ├── 📄 .gitignore
 │   ├── 📄 database.py
+│   ├── 📁 docs/
+│   │   ├── 📄 MVP.md
+│   │   └── 📄 PRD.md
 │   ├── 📄 main.py
 │   ├── 📄 models.py
 │   ├── 📄 requirements.txt
 │   ├── 📄 simulador_iot.py
+│   ├── 📄 structure.md
+│   ├── 📁 trazabilidad-backend/
+│   │   ├── 📄 .env.example
+│   │   ├── 📄 database.py
+│   │   ├── 📄 main.py
+│   │   ├── 📄 models.py
+│   │   ├── 📄 requirements.txt
+│   │   └── 📄 simulador_iot.py
+│   ├── 📁 trazabilidad-frontend/
+│   │   ├── 📄 index.html
+│   │   ├── 📄 package-lock.json
+│   │   ├── 📄 package.json
+│   │   ├── 📁 public/
+│   │   │   ├── 📄 favicon.svg
+│   │   │   └── 📄 icons.svg
+│   │   ├── 📄 README.md
+│   │   ├── 📁 src/
+│   │   │   ├── 📄 App.css
+│   │   │   ├── 📄 App.jsx
+│   │   │   ├── 📁 assets/
+│   │   │   │   ├── 📄 hero.png
+│   │   │   │   ├── 📄 react.svg
+│   │   │   │   └── 📄 vite.svg
+│   │   │   ├── 📄 index.css
+│   │   │   └── 📄 main.jsx
+│   │   └── 📄 vite.config.js
+│   ├── 📄 trazabilidad.db
 │   ├── 📁 venv/
 │   │   ├── 📁 Include/
 │   │   │   └── 📁 site/

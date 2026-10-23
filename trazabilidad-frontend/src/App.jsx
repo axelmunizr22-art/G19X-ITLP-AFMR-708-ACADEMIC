@@ -17,8 +17,13 @@ export default function App() {
       setNotificacionToast(null);
     }, 5000);
   };
-  const [formAuth, setFormAuth] = useState({ correo: '', password: '' });
-  const [alertaAuth, setAlertaAuth] = useState(null);
+  const [formAuth, setFormAuth] = useState({
+  correo: '',
+  password: '',
+  password_actual: '',
+  nueva_password: '',
+});
+  const [alertaAuth, setAlertaAuth] = useState(null);  
 
   const [materiales, setMateriales] = useState([]);
   const [guiaSeleccionada, setGuiaSeleccionada] = useState(null);
@@ -64,27 +69,34 @@ export default function App() {
   const [inputChat, setInputChat] = useState('');
   const [cargandoBot, setCargandoBot] = useState(false);
 
-  const enviarMensajeChat = async (e) => {
-    e?.preventDefault();
-    if (!inputChat.trim() || cargandoBot) return;
+ const enviarMensajeChat = async (e) => {
+  e?.preventDefault();
+  if (!inputChat.trim() || cargandoBot) return;
 
-    const textoUsuario = inputChat.trim();
-    setInputChat('');
-    setMensajesChat((prev) => [...prev, { remitente: 'usuario', texto: textoUsuario }]);
-    setCargandoBot(true);
+  const textoUsuario = inputChat.trim();
+  setInputChat('');
+  setMensajesChat((prev) => [...prev, { remitente: 'usuario', texto: textoUsuario }]);
+  setCargandoBot(true);
 
-    try {
-      const res = await axios.post(`${API_URL}/chatbot`, { message: textoUsuario });
-      setMensajesChat((prev) => [...prev, { remitente: 'bot', texto: res.data.respuesta }]);
-    } catch (err) {
-      setMensajesChat((prev) => [
-        ...prev,
-        { remitente: 'bot', texto: '⚠️ Ocurrió un error al conectar con el servidor de trazabilidad.' }
-      ]);
-    } finally {
-      setCargandoBot(false);
-    }
-  };
+  try {
+    const token = localStorage.getItem('token'); // 1. Recuperamos el token
+    const res = await axios.post(
+      `${API_URL}/chatbot`, 
+      { message: textoUsuario },
+      {
+        headers: { Authorization: `Bearer ${token}` } // 2. ¡Lo adjuntamos aquí!
+      }
+    );
+    setMensajesChat((prev) => [...prev, { remitente: 'bot', texto: res.data.respuesta }]);
+  } catch (err) {
+    setMensajesChat((prev) => [
+      ...prev,
+      { remitente: 'bot', texto: '⚠️ Ocurrió un error al conectar con el servidor de trazabilidad o sesión expirada.' }
+    ]);
+  } finally {
+    setCargandoBot(false);
+  }
+};
 
   const mostrarNotificacion = (tipo, mensaje) => {
     setAlertaAuth({ tipo, mensaje });
@@ -97,19 +109,33 @@ export default function App() {
     
     try {
       if (modoAuth === 'login') {
-        const res = await axios.post(`${API_URL}/auth/login`, formAuth);
-        setUsuarioAutenticado(res.data.correo);
-      } else if (modoAuth === 'register') {
+      const res = await axios.post(`${API_URL}/auth/login`, formAuth);
+      setUsuarioAutenticado(res.data.correo);
+      
+      localStorage.setItem('token', res.data.access_token);
+    } else if (modoAuth === 'register') {
         await axios.post(`${API_URL}/auth/register`, formAuth);
         mostrarNotificacion('exito', '¡Cuenta creada con éxito! Ya puedes iniciar sesión.');
         setFormAuth({ correo: '', password: '' });
         setModoAuth('login');
       } else if (modoAuth === 'recuperar') {
-        await axios.post(`${API_URL}/auth/recuperar`, formAuth);
-        mostrarNotificacion('exito', '¡Contraseña actualizada correctamente!');
-        setFormAuth({ correo: '', password: '' });
-        setModoAuth('login');
-      }
+  await axios.post(`${API_URL}/auth/recuperar`, {
+    correo: formAuth.correo,
+    password_actual: formAuth.password_actual,
+    nueva_password: formAuth.nueva_password,
+  });
+
+  mostrarNotificacion('exito', '¡Contraseña actualizada correctamente!');
+
+  setFormAuth({
+    correo: '',
+    password: '',
+    password_actual: '',
+    nueva_password: '',
+  });
+
+  setModoAuth('login');
+}
     } catch (err) {
       const msjError = err.response?.data?.detail || 'Error al procesar la solicitud';
       mostrarNotificacion('error', msjError);
@@ -117,31 +143,34 @@ export default function App() {
   };
 
   const cargarMateriales = async () => {
-    if (!usuarioAutenticado) return;
-    try {
-      const res = await axios.get(`${API_URL}/materiales/`);
-      setMateriales(res.data);
-    } catch (err) {
-      console.error('Error al cargar datos:', err);
-    }
-  };
+  if (!usuarioAutenticado) return;
+  try {
+    const token = localStorage.getItem('token'); // Recuperar el token
+    const res = await axios.get(`${API_URL}/materiales/`, {
+      headers: { Authorization: `Bearer ${token}` } // <--- ¡Añadir esto!
+    });
+    setMateriales(res.data);
+  } catch (err) {
+    console.error('Error al cargar datos:', err);
+  }
+};
 
-  // Cargar catálogo de clientes, conductores y rutas
-  const cargarCatalogos = async () => {
-    if (!usuarioAutenticado) return;
-    try {
-      const [resC, resCond, resR] = await Promise.all([
-        axios.get(`${API_URL}/clientes`),
-        axios.get(`${API_URL}/conductores`),
-        axios.get(`${API_URL}/rutas`)
-      ]);
-      setClientes(resC.data);
-      setConductores(resCond.data);
-      setRutas(resR.data);
-    } catch (err) {
-      console.error('Error al cargar catálogos:', err);
-    }
-  };
+const cargarCatalogos = async () => {
+  if (!usuarioAutenticado) return;
+  try {
+    const token = localStorage.getItem('token'); // Recuperar el token
+    const [resC, resCond, resR] = await Promise.all([
+      axios.get(`${API_URL}/clientes`, { headers: { Authorization: `Bearer ${token}` } }),
+      axios.get(`${API_URL}/conductores`, { headers: { Authorization: `Bearer ${token}` } }),
+      axios.get(`${API_URL}/rutas`, { headers: { Authorization: `Bearer ${token}` } })
+    ]);
+    setClientes(resC.data);
+    setConductores(resCond.data);
+    setRutas(resR.data);
+  } catch (err) {
+    console.error('Error al cargar catálogos:', err);
+  }
+};
 
   useEffect(() => {
     if (usuarioAutenticado) {
@@ -309,42 +338,77 @@ export default function App() {
           </div>
 
           <form onSubmit={handleAuthSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#334155', marginBottom: '6px' }}>
-                Correo Electrónico
-              </label>
-              <input
-                type="email"
-                placeholder="usuario@develop.com.mx"
-                value={formAuth.correo}
-                onChange={(e) => setFormAuth({ ...formAuth, correo: e.target.value })}
-                style={{ width: '100%', padding: '12px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box', outline: 'none' }}
-                required
-              />
-            </div>
+            {/* Correo Electrónico (Siempre visible) */}
+  <div>
+    <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#334155', marginBottom: '6px' }}>
+      Correo Electrónico
+    </label>
+    <input
+      type="email"
+      placeholder="usuario@develop.com.mx"
+      value={formAuth.correo}
+      onChange={(e) => setFormAuth({ ...formAuth, correo: e.target.value })}
+      style={{ width: '100%', padding: '12px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box', outline: 'none' }}
+      required
+    />
+  </div>
 
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#334155', marginBottom: '6px' }}>
-                {modoAuth === 'recuperar' ? 'Nueva Contraseña' : 'Contraseña'}
-              </label>
-              <input
-                type="password"
-                placeholder="••••••••"
-                value={formAuth.password}
-                onChange={(e) => setFormAuth({ ...formAuth, password: e.target.value })}
-                style={{ width: '100%', padding: '12px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box', outline: 'none' }}
-                required
-              />
-            </div>
+  {/* SI ESTAMOS EN MODO RECUPERAR: Mostramos Contraseña Actual y Nueva Contraseña */}
+  {modoAuth === 'recuperar' ? (
+    <>
+      <div>
+        <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#334155', marginBottom: '6px' }}>
+          Contraseña Actual
+        </label>
+        <input
+          type="password"
+          placeholder="••••••••"
+          value={formAuth.password_actual || ''}
+          onChange={(e) => setFormAuth({ ...formAuth, password_actual: e.target.value })}
+          style={{ width: '100%', padding: '12px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box', outline: 'none' }}
+          required
+        />
+      </div>
 
-            <button
-              type="submit"
-              style={{ backgroundColor: '#2563eb', color: '#ffffff', border: 'none', padding: '14px', borderRadius: '8px', fontSize: '15px', fontWeight: '700', cursor: 'pointer', marginTop: '8px' }}
-            >
-              {modoAuth === 'login' && 'Iniciar Sesión'}
-              {modoAuth === 'register' && 'Registrar Cuenta'}
-              {modoAuth === 'recuperar' && 'Actualizar Contraseña'}
-            </button>
+      <div>
+        <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#334155', marginBottom: '6px' }}>
+          Nueva Contraseña
+        </label>
+        <input
+          type="password"
+          placeholder="••••••••"
+          value={formAuth.nueva_password || ''}
+          onChange={(e) => setFormAuth({ ...formAuth, nueva_password: e.target.value })}
+          style={{ width: '100%', padding: '12px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box', outline: 'none' }}
+          required
+        />
+      </div>
+    </>
+  ) : (
+    /* SI ES LOGIN O REGISTRO: Mostramos un solo campo de contraseña normal */
+    <div>
+      <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#334155', marginBottom: '6px' }}>
+        Contraseña
+      </label>
+      <input
+        type="password"
+        placeholder="••••••••"
+        value={formAuth.password || ''}
+        onChange={(e) => setFormAuth({ ...formAuth, password: e.target.value })}
+        style={{ width: '100%', padding: '12px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box', outline: 'none' }}
+        required
+      />
+    </div>
+  )}
+
+  <button
+    type="submit"
+    style={{ backgroundColor: '#2563eb', color: '#ffffff', border: 'none', padding: '14px', borderRadius: '8px', fontSize: '15px', fontWeight: '700', cursor: 'pointer', marginTop: '8px' }}
+  >
+    {modoAuth === 'login' && 'Iniciar Sesión'}
+    {modoAuth === 'register' && 'Registrar Cuenta'}
+    {modoAuth === 'recuperar' && 'Actualizar Contraseña'}
+  </button>
           </form>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px', fontSize: '13px' }}>
