@@ -25,5 +25,3 @@ G19X-ITLP-AFMR-708-ACADEMIC/
 │   └── vite.config.js         # Configuración del empaquetador Vite
 ├── .gitignore                 # Exclusión de venv, .env, dist y trazabilidad.db
 ├── README.md                  # Documentación principal del proyecto
-└── structure.md               # Árbol de archivos del repositorio
-```
