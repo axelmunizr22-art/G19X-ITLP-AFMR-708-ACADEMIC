@@ -4,6 +4,19 @@ import html2pdf from 'html2pdf.js';
 import { QRCodeCanvas } from 'qrcode.react';
 
 const API_URL = 'http://localhost:8000';
+// Interceptor global para que Axios agregue el token automáticamente a CADA petición
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 export default function App() {
 

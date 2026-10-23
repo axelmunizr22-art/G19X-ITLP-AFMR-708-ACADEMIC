@@ -75,25 +75,20 @@ Base.metadata.create_all(bind=engine)
 from database import SessionLocal
 import models
 
-def seed_usuario():
-    db = SessionLocal()
-    try:
-        existe = db.query(models.Usuario).filter(models.Usuario.correo == "admin@plurione.com").first()
-        if not existe:
-            nuevo = models.Usuario(
-                correo="admin@plurione.com",
-                password=obtener_password_hash("admin123"),
-                nombre="Administrador",
-                rol="Admin"
-            )
-            db.add(nuevo)
-            db.commit()
-    except Exception as e:
-        print("Seed error:", e)
-    finally:
-        db.close()
-
-seed_usuario()
+def seed_usuario(db: Session):
+    # Verificamos si ya existe el usuario admin
+    admin_correo = os.getenv("ADMIN_CORREO", "admin@plurionetrace.com")
+    admin_password = os.getenv("ADMIN_PASSWORD", "PasswordPorDefecto123") 
+    
+    usuario_existente = db.query(models.Usuario).filter(models.Usuario.correo == admin_correo).first()
+    if not usuario_existente:
+        nuevo_admin = models.Usuario(
+            correo=admin_correo,
+            password=get_password_hash(admin_password) # Encriptada con tu función de seguridad
+        )
+        db.add(nuevo_admin)
+        db.commit()
+        print(f"Usuario administrador inicial creado: {admin_correo}")
 
 # 2. Inicializar la app de FastAPI (Instancia Única)
 app = FastAPI(title="PluriOne Trace API", version="1.0")

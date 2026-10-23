@@ -58,18 +58,7 @@ Desarrollar una plataforma web que centralice el registro y seguimiento de mater
 
 Texto introductorio de la arquitectura.
 
-```mermaid
-flowchart TD
-    U["Operador"] --> FE["Frontend: React + Vite"]
-    FE --> API["HTTP / JSON"]
-    API --> BE["Backend: FastAPI"]
-    BE --> ORM["ORM: SQLAlchemy"]
-    ORM --> DB["Base de datos: SQLite"]
-    BE --> IA["Servicio de IA: Google Gemini API"]
-    IA --> PROMPT["Prompt con contexto logístico"]
-    SIM["Simulador IoT"] --> API
-    FE --> PDF["Exportación de guía: html2pdf.js"]
-```
+La arquitectura de PluriOne Trace se organiza en una aplicación web desarrollada con React y Vite, un backend basado en FastAPI y una base de datos SQLite gestionada mediante SQLAlchemy. La comunicación entre el frontend y el backend se realiza mediante una API REST sobre HTTP/JSON. El sistema integra un servicio de inteligencia artificial para consultas logísticas y permite generar guías en PDF desde la interfaz. Las funciones de identificación y seguimiento se limitan a los mecanismos implementados en esta versión del MVP.
 
 ### 5.1 Frontend
 
