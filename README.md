@@ -88,6 +88,9 @@ pip install -r requirements.txt
 
 ### 3. Configurar las variables de entorno
 
+Copia el archivo `.env.example` y nómbralo `.env` dentro de la carpeta `trazabilidad-backend`. Abre tu archivo `.env` y asegúrate de configurar estas variables obligatorias:
+
+
 Dentro de `trazabilidad-backend`, busca el archivo `.env.example` y crea una copia llamada `.env`.
 
 En Windows PowerShell:
@@ -111,17 +114,22 @@ cp .env.example .env
 Abre el archivo `.env` y configura las variables necesarias:
 
 ```env
-GEMINI_API_KEY=tu_clave_de_api_de_gemini
+ADMIN_CORREO=admin@plurione.com
 ADMIN_PASSWORD=tu_contrasena_segura
+GEMINI_API_KEY=tu_clave_de_api_de_gemini
+SECRET_KEY=tu_llave_secreta_jwt_super_segura
+DATABASE_URL=sqlite:///./trazabilidad.db
 ```
 
 **Importante:**
 
-- Sustituye `tu_clave_de_api_de_gemini` por tu clave real de Google Gemini.
-- Sustituye `tu_contrasena_segura` por una contraseña segura para la cuenta de administrador.
-- No compartas tu archivo `.env` ni publiques sus credenciales en GitHub.
-- El archivo `.env` debe estar excluido del control de versiones mediante `.gitignore`.
-- Conserva `.env.example` sin claves ni contraseñas reales para que otros desarrolladores sepan qué variables deben configurar.
+- ADMIN_CORREO y ADMIN_PASSWORD: Credenciales del administrador inicial (cargadas de manera segura en el backend mediante la función seed_usuario(), evitando contraseñas quemadas en el código fuente).
+- SECRET_KEY: Llave criptográfica estricta para firmar y validar los tokens JWT de sesión.
+- GEMINI_API_KEY: Tu clave personal de Google Gemini para la inteligencia artificial.
+- No compartas tu archivo .env ni publiques tus credenciales en GitHub.
+- El archivo .env debe estar excluido del control de versiones mediante .gitignore.
+- Conserva .env.example sin claves ni contraseñas reales para que otros desarrolladores sepan qué variables deben configurar.
+
 
 Si el proyecto utiliza otras variables de entorno, agrégalas al archivo `.env` según la configuración del backend.
 
@@ -168,7 +176,7 @@ Mantén abierta esta terminal mientras utilizas el sistema.
 
 ---
 
-## 👤 Cuenta de administrador
+##  Cuenta de administrador
 
 Durante el inicio del backend, la función `seed_usuario()` de `main.py` puede crear automáticamente una cuenta de administrador si así está implementado en el proyecto.
 
@@ -201,11 +209,8 @@ Los permisos y las funciones disponibles dependerán del rol asignado a cada usu
 
 ##  Base de datos
 
-El proyecto utiliza SQLite para almacenar la información de trazabilidad.
 
-El archivo `trazabilidad.db` se genera automáticamente cuando el backend inicializa la base de datos, siempre que así esté configurado en `main.py`.
-
-La base de datos permite almacenar información relacionada con los materiales, clientes, conductores, rutas, usuarios e historial de trazabilidad.
+El proyecto utiliza SQLite para almacenar la información de trazabilidad. El archivo trazabilidad.db se genera automáticamente de forma local al iniciar el backend.
 
 ---
 

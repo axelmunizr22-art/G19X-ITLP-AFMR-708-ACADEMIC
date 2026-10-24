@@ -18,10 +18,13 @@ from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from fastapi.security import OAuth2PasswordBearer
 
-# Clave secreta para firmar los tokens (en producción iría en .env)
-SECRET_KEY = "clave_secreta_super_segura_para_residencias_2026"
+# Leer la SECRET_KEY de las variables de entorno de forma segura
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("⚠️ No se encontró la variable SECRET_KEY en el archivo .env")
+
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
