@@ -321,7 +321,7 @@ def recuperar_password(datos: RecuperarSchema, db: Session = Depends(get_db)):
 # ==========================================
 
 @app.post("/materiales/", status_code=201)
-def registrar_material(material: MaterialCreate, db: Session = Depends(get_db)):
+def registrar_material(material: MaterialCreate, db: Session = Depends(get_db), usuario_actual = Depends(obtener_usuario_actual)):
     existe = db.query(models.Material).filter(
         models.Material.id == material.id
     ).first()
@@ -360,12 +360,8 @@ def registrar_material(material: MaterialCreate, db: Session = Depends(get_db)):
     return nuevo_mat
 
 
-@app.put("/materiales/{material_id}/escanear")
-def escanear_material(
-    material_id: str,
-    datos: EscaneoUpdate,
-    db: Session = Depends(get_db)
-):
+@app.put("/materiales/{id}/escanear")
+def escanear_material(id: int, datos: EscaneoUpdate, db: Session = Depends(get_db), usuario_actual = Depends(obtener_usuario_actual)):
     mat = db.query(models.Material).filter(
         models.Material.id == material_id
     ).first()
@@ -536,7 +532,8 @@ def obtener_clientes(db: Session = Depends(get_db), usuario_actual: models.Usuar
 
 
 @app.post("/clientes")
-def crear_cliente(cliente: ClienteCreate, db: Session = Depends(get_db)):
+def crear_cliente(cliente: ClienteCreate, db: Session = Depends(get_db), usuario_actual = Depends(obtener_usuario_actual)):
+    
     nuevo = models.Cliente(**cliente.dict())
     db.add(nuevo)
     db.commit()
@@ -557,7 +554,7 @@ def obtener_conductores(
 
 
 @app.post("/conductores")
-def crear_conductor(conductor: ConductorCreate, db: Session = Depends(get_db)):
+def crear_conductor(conductor: ConductorCreate, db: Session = Depends(get_db), usuario_actual = Depends(obtener_usuario_actual)):   
     nuevo = models.Conductor(**conductor.dict())
     db.add(nuevo)
     db.commit()
@@ -578,7 +575,7 @@ def obtener_rutas(
 
 
 @app.post("/rutas")
-def crear_ruta(ruta: RutaCreate, db: Session = Depends(get_db)):
+def crear_ruta(ruta: RutaCreate, db: Session = Depends(get_db), usuario_actual = Depends(obtener_usuario_actual)):  
     nuevo = models.Ruta(**ruta.dict())
     db.add(nuevo)
     db.commit()
@@ -591,7 +588,8 @@ def crear_ruta(ruta: RutaCreate, db: Session = Depends(get_db)):
 # ==========================================
 
 @app.post("/envios/asignar")
-def asignar_datos_envio(datos: AsignarEnvio, db: Session = Depends(get_db)):
+def asignar_datos_envio(datos: AsignarEnvio, db: Session = Depends(get_db), usuario_actual = Depends(obtener_usuario_actual)):
+    
     material = db.query(models.Material).filter(
         models.Material.id == datos.material_id
     ).first()
