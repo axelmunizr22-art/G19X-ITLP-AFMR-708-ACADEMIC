@@ -700,20 +700,6 @@ const cargarCatalogos = async () => {
   </div>
 )}
 
-  {/* Componente QR en Imagen PNG (Compatible 100% con PDF) */}
-<div style={{ margin: '16px auto', textAlign: 'center', backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1', maxWidth: '200px' }}>
-  <p style={{ fontSize: '11px', fontWeight: 'bold', color: '#0284c7', marginBottom: '8px', textTransform: 'uppercase' }}>QR de Verificación</p>
-  <div style={{ display: 'inline-block', background: '#fff', padding: '8px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-    <img 
-      src={`https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encodeURIComponent(guiaSeleccionada?.id || 'PLURIONE-TRACE-DEFAULT')}`} 
-      alt="Código QR de Verificación"
-      style={{ width: '110px', height: '110px', display: 'block', margin: '0 auto' }}
-    />
-  </div>
-  <p style={{ fontSize: '10px', color: '#64748b', marginTop: '6px', wordBreak: 'break-all', fontWeight: 'bold' }}>
-    ID: {guiaSeleccionada?.id || 'N/A'}
-  </p>
-</div>
 
 
 {/* Código QR interactivo de la guía */}
@@ -726,7 +712,7 @@ const cargarCatalogos = async () => {
         level="H" 
       />
     </div>
-    <p style={{ fontSize: '10px', color: '#94a3b8', marginTop: '6px' }}>Escanee para validación logística in situ</p>
+    <p style={{ fontSize: '10px', color: '#94a3b8', marginTop: '6px' }}>Escanee para validación logística</p>
   </div>
 
 
