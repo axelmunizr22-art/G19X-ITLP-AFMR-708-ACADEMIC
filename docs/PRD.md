@@ -46,7 +46,7 @@ Transformar la gestión de inventarios y envíos dentro de la cadena de suminist
 
 ### 3.1. En Alcance (In Scope)
 * **Autenticación segura de usuarios:** Control de acceso, inicio de sesión y gestión de perfiles (`/auth/login`, `/auth/register`, `/auth/recuperar`) con persistencia en la tabla `usuarios`.
-* **Registro atómico de paquetes e insumos:** Ingesta de materiales (`MAT-XXX`) asociando el cliente destinatario, ubicación inicial y soporte para etiquetado con Códigos QR y lecturas RFID.
+* **Registro atómico de paquetes e insumos:** Ingesta de materiales (MAT-XXX) asociando el cliente destinatario, ubicación inicial y soporte para etiquetado con Códigos QR y simulación lógica de lecturas RFID a nivel de software.
 * **Asignación logística relacional (Outbound):** Vinculación dinámica entre el paquete, el cliente receptor, el conductor designado y la ruta de transporte, cambiando el estado operativo a *"En Tránsito"*.
 * **Bitácora inmutable de checkpoints (Escaneo y Seguimiento):** Actualización de ubicaciones en tiempo real y estados logísticos (*En Regla/Tránsito, Retrasado, Entregado*) con registro histórico de fechas, horas y motivos de retraso.
 * **Diagnóstico preventivo con IA:** Inferencia automática sobre los trayectos (`GET /materiales/{id}/analisis-ia`) para clasificar el nivel de riesgo en la entrega (*Alto, Medio, Bajo*) y detectar posibles anomalías antes de que afecten al cliente.

@@ -56,7 +56,6 @@ Desarrollar una plataforma web que centralice el registro y seguimiento de mater
 
 ## 5. Arquitectura del sistema
 
-Texto introductorio de la arquitectura.
 
 La arquitectura de PluriOne Trace se organiza en una aplicación web desarrollada con React y Vite, un backend basado en FastAPI y una base de datos SQLite gestionada mediante SQLAlchemy. La comunicación entre el frontend y el backend se realiza mediante una API REST sobre HTTP/JSON. El sistema integra un servicio de inteligencia artificial para consultas logísticas y permite generar guías en PDF desde la interfaz. Las funciones de identificación y seguimiento se limitan a los mecanismos implementados en esta versión del MVP.
 

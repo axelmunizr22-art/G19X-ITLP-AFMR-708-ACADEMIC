@@ -716,6 +716,20 @@ const cargarCatalogos = async () => {
 </div>
 
 
+{/* Código QR interactivo de la guía */}
+  <div style={{ marginTop: '16px', marginBottom: '16px', textAlign: 'center', backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+    <p style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b', marginBottom: '8px', textTransform: 'uppercase' }}>Código QR de Verificación Digital</p>
+    <div style={{ display: 'inline-block', background: '#fff', padding: '8px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+      <QRCodeCanvas 
+        value={guiaSeleccionada?.id || 'PLURIONE-TRACE'} 
+        size={110} 
+        level="H" 
+      />
+    </div>
+    <p style={{ fontSize: '10px', color: '#94a3b8', marginTop: '6px' }}>Escanee para validación logística in situ</p>
+  </div>
+
+
                       <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#0f172a', textTransform: 'uppercase', borderBottom: '1px solid #cbd5e1', paddingBottom: '4px' }}>
                         Historial de Puntos de Control y Escaneos
                       </h4>

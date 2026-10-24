@@ -27,6 +27,7 @@ G19X-ITLP-AFMR-708-ACADEMIC/
 ├── README.md                  # Documentación principal del proyecto
 
 
+
 <!-- PROJECT_STRUCTURE_START -->
 ```
 ├── 📄 .gitignore
