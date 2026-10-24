@@ -79,15 +79,19 @@ from database import SessionLocal
 import models
 
 def seed_usuario(db: Session):
-    # Verificamos si ya existe el usuario admin
+    # Verificamos si ya existe el usuario admin leyendo desde el .env
     admin_correo = os.getenv("ADMIN_CORREO", "admin@plurionetrace.com")
-    admin_password = os.getenv("ADMIN_PASSWORD", "PasswordPorDefecto123") 
+    admin_password = os.getenv("ADMIN_PASSWORD")  # Sin valor por defecto fijo en el código
     
+    if not admin_password:
+        print("Advertencia: ADMIN_PASSWORD no está configurada en las variables de entorno.")
+        return
+
     usuario_existente = db.query(models.Usuario).filter(models.Usuario.correo == admin_correo).first()
     if not usuario_existente:
         nuevo_admin = models.Usuario(
             correo=admin_correo,
-            password=get_password_hash(admin_password) # Encriptada con tu función de seguridad
+            password=obtener_password_hash(admin_password)  # <--- Corregido al nombre correcto de tu función
         )
         db.add(nuevo_admin)
         db.commit()

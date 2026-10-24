@@ -201,7 +201,10 @@ Para acceder al sistema:
 1. Ejecuta el backend y el frontend siguiendo los pasos anteriores.
 2. Abre http://localhost:5173 en tu navegador.
 3. Inicia sesión con una cuenta existente.
+* **Correo:** `admin@plurionetrace.com`
+* **Contraseña:** Configurada en la variable `ADMIN_PASSWORD` del archivo `.env`.
 4. Si no tienes una cuenta, utiliza la opción de registro, cuando esté habilitada.
+
 
 Los permisos y las funciones disponibles dependerán del rol asignado a cada usuario.
 
