@@ -42,11 +42,9 @@ Antes de instalar el proyecto, asegúrate de tener:
 Clona el repositorio y entra en la carpeta principal:
 
 ```bash
-git clone URL_DEL_REPOSITORIO
-cd NOMBRE_DEL_REPOSITORIO
+git clone [https://github.com/axelmunizr22-art/G19X-ITLP-AFMR-708-ACADEMIC.git](https://github.com/axelmunizr22-art/G19X-ITLP-AFMR-708-ACADEMIC.git)
+cd G19X-ITLP-AFMR-708-ACADEMIC
 ```
-
-Reemplaza `URL_DEL_REPOSITORIO` y `NOMBRE_DEL_REPOSITORIO` por los datos reales de tu repositorio.
 
 ### 2. Configurar el backend
 
@@ -88,13 +86,9 @@ pip install -r requirements.txt
 
 ### 3. Configurar las variables de entorno
 
-Copia el archivo `.env.example` y nómbralo `.env` dentro de la carpeta `trazabilidad-backend`. Abre tu archivo `.env` y asegúrate de configurar estas variables obligatorias:
-
-
-Dentro de `trazabilidad-backend`, busca el archivo `.env.example` y crea una copia llamada `.env`.
+Copia el archivo `.env.example` y nómbralo `.env` dentro de la carpeta `trazabilidad-backend`.
 
 En Windows PowerShell:
-
 ```powershell
 Copy-Item .env.example .env
 ```
@@ -130,8 +124,6 @@ DATABASE_URL=sqlite:///./trazabilidad.db
 - El archivo .env debe estar excluido del control de versiones mediante .gitignore.
 - Conserva .env.example sin claves ni contraseñas reales para que otros desarrolladores sepan qué variables deben configurar.
 
-
-Si el proyecto utiliza otras variables de entorno, agrégalas al archivo `.env` según la configuración del backend.
 
 ### 4. Ejecutar el backend
 
@@ -176,39 +168,32 @@ Mantén abierta esta terminal mientras utilizas el sistema.
 
 ---
 
-##  Cuenta de administrador
+## Cuenta de Administrador
 
-Durante el inicio del backend, la función `seed_usuario()` de `main.py` puede crear automáticamente una cuenta de administrador si así está implementado en el proyecto.
+El sistema cuenta con la función de inicialización automática `seed_usuario()` en `main.py`, la cual se ejecuta al arrancar el servidor backend para crear un usuario administrador único si no existe previamente en la base de datos `trazabilidad.db`.
 
-Por seguridad, la contraseña del administrador debe obtenerse de la variable de entorno `ADMIN_PASSWORD`, definida en el archivo `.env`, y no estar escrita directamente en el código fuente.
+Por motivos de seguridad, la contraseña se obtiene estrictamente de la variable de entorno `ADMIN_PASSWORD` definida en el archivo `.env`, evitando almacenar claves fijas en el código fuente.
 
-Para configurar la contraseña:
+**Credenciales de acceso configuradas por defecto:**
+* **Correo:** `admin@plurionetrace.com` (o el especificado en la variable `ADMIN_CORREO` de tu `.env`).
+* **Contraseña:** Definida mediante la variable `ADMIN_PASSWORD`.
 
-1. Abre el archivo `.env` del backend.
-2. Define la variable `ADMIN_PASSWORD` con una contraseña segura.
-3. Inicia el backend para que se ejecute el proceso de inicialización de usuarios.
-
-La cuenta de administrador debe utilizar el correo que establezca la implementación de `seed_usuario()` en `main.py`. Consulta esa función para identificar el correo configurado.
-
-**Nota:** Si la cuenta de administrador ya existe en la base de datos, modificar `ADMIN_PASSWORD` no necesariamente cambiará su contraseña. Esto depende de cómo esté implementada la función `seed_usuario()`.
+Para iniciar sesión con privilegios de administrador por primera vez, asegúrate de haber configurado tu archivo `.env` antes de encender el servidor backend con Uvicorn.
 
 ---
 
-##  Registro e inicio de sesión
+### Registro e Inicio de Sesión
 
 Para acceder al sistema:
 
 1. Ejecuta el backend y el frontend siguiendo los pasos anteriores.
-2. Abre http://localhost:5173 en tu navegador.
-3. Inicia sesión con una cuenta existente.
-* **Correo:** `admin@plurionetrace.com`
-* **Contraseña:** Configurada en la variable `ADMIN_PASSWORD` del archivo `.env`.
-4. Si no tienes una cuenta, utiliza la opción de registro, cuando esté habilitada.
+2. Abre `http://localhost:5173` en tu navegador.
+3. Inicia sesión con las credenciales de administrador por defecto:
+   * **Correo:** `admin@plurionetrace.com` (o el configurado en `ADMIN_CORREO` del `.env`)
+   * **Contraseña:** Configurada en la variable `ADMIN_PASSWORD` del archivo `.env`.
+4. Si requieres una cuenta adicional, utiliza la opción de registro integrada en la interfaz para dar de alta nuevos usuarios con sus respectivas contraseñas cifradas de forma segura.
 
-
-Los permisos y las funciones disponibles dependerán del rol asignado a cada usuario.
-
----
+Los permisos y las funciones disponibles están protegidos mediante tokens de acceso (JWT) para garantizar la seguridad del sistema.
 
 ##  Base de datos
 
