@@ -32,6 +32,9 @@ G19X-ITLP-AFMR-708-ACADEMIC/
 ```
 ├── 📄 .gitignore
 ├── 📁 docs/
+│   ├── 📁 evidencias/
+│   │   └── 📁 evidencias/
+│   │       └── 📄 instalacion-limpia.md
 │   ├── 📄 MVP.md
 │   └── 📄 PRD.md
 ├── 📄 README.md
