@@ -218,7 +218,26 @@ PluriOne Trace integra Google Gemini para ofrecer asistencia conversacional rela
 - En entornos de producción, desactiva la configuración de recarga automática de Uvicorn y utiliza una configuración de despliegue apropiada.
 
 ---
+## Simulador IoT
+
+El proyecto incluye un script emulador para enviar actualizaciones automáticas de ubicación y estado a la API simulando dispositivos IoT en campo.
+
+### ¿Cómo ejecutarlo?
+
+1. Asegúrate de tener tu entorno virtual activo y el backend encendido (`uvicorn main:app --reload`).
+2. Ejecuta el simulador pasando como argumentos el ID del material y la nueva ubicación:
+   ```bash
+   python trazabilidad-backend/simulador_iot.py MAT-101 "Monterrey"
+
+### 4. Prueba final del Simulador
+Una vez guardados los cambios:
+1. Con tu backend encendido (`uvicorn main:app --reload`), corre en tu terminal:
+   ```bash
+   python trazabilidad-backend/simulador_iot.py MAT-101 "Monterrey"
+
+
 
 ##  Licencia
 
 Proyecto académico desarrollado para fines educativos y de demostración tecnológica.
+

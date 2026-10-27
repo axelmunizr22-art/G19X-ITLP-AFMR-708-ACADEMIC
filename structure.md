@@ -610,6 +610,25 @@ G19X-ITLP-AFMR-708-ACADEMIC/
 │   │   │       │   ├── 📄 RECORD
 │   │   │       │   ├── 📄 top_level.txt
 │   │   │       │   └── 📄 WHEEL
+│   │   │       ├── 📁 dotenv/
+│   │   │       │   ├── 📄 cli.py
+│   │   │       │   ├── 📄 ipython.py
+│   │   │       │   ├── 📄 main.py
+│   │   │       │   ├── 📄 parser.py
+│   │   │       │   ├── 📄 py.typed
+│   │   │       │   ├── 📄 variables.py
+│   │   │       │   ├── 📄 version.py
+│   │   │       │   ├── 📄 __init__.py
+│   │   │       │   ├── 📄 __main__.py
+│   │   │       │   └── 📁 __pycache__/
+│   │   │       │       ├── 📄 cli.cpython-312.pyc
+│   │   │       │       ├── 📄 ipython.cpython-312.pyc
+│   │   │       │       ├── 📄 main.cpython-312.pyc
+│   │   │       │       ├── 📄 parser.cpython-312.pyc
+│   │   │       │       ├── 📄 variables.cpython-312.pyc
+│   │   │       │       ├── 📄 version.cpython-312.pyc
+│   │   │       │       ├── 📄 __init__.cpython-312.pyc
+│   │   │       │       └── 📄 __main__.cpython-312.pyc
 │   │   │       ├── 📁 fastapi/
 │   │   │       │   ├── 📁 .agents/
 │   │   │       │   │   └── 📁 skills/
@@ -4342,6 +4361,16 @@ G19X-ITLP-AFMR-708-ACADEMIC/
 │   │   │       │   ├── 📁 sboms/
 │   │   │       │   │   └── 📄 pydantic-core.cyclonedx.json
 │   │   │       │   └── 📄 WHEEL
+│   │   │       ├── 📁 python_dotenv-1.2.4.dist-info/
+│   │   │       │   ├── 📄 entry_points.txt
+│   │   │       │   ├── 📄 INSTALLER
+│   │   │       │   ├── 📁 licenses/
+│   │   │       │   │   └── 📄 LICENSE
+│   │   │       │   ├── 📄 METADATA
+│   │   │       │   ├── 📄 RECORD
+│   │   │       │   ├── 📄 REQUESTED
+│   │   │       │   ├── 📄 top_level.txt
+│   │   │       │   └── 📄 WHEEL
 │   │   │       ├── 📁 requests/
 │   │   │       │   ├── 📄 adapters.py
 │   │   │       │   ├── 📄 api.py
@@ -5474,6 +5503,7 @@ G19X-ITLP-AFMR-708-ACADEMIC/
 │   │       ├── 📄 cffi-gen-src.exe
 │   │       ├── 📄 deactivate.bat
 │   │       ├── 📄 distro.exe
+│   │       ├── 📄 dotenv.exe
 │   │       ├── 📄 fastapi.exe
 │   │       ├── 📄 httpx.exe
 │   │       ├── 📄 idna.exe
