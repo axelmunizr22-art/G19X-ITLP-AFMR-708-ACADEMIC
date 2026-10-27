@@ -42,7 +42,7 @@ Antes de instalar el proyecto, asegúrate de tener:
 Clona el repositorio y entra en la carpeta principal:
 
 ```bash
-git clone https://github.com/axelmunizr22-art/G19X-ITLP-AFMR-708-ACADEMIC.git
+git clone https://github.com/axelmunizr22-art/G19X-ITLP-AFMR-708-ACADEMIC.git. 
 cd G19X-ITLP-AFMR-708-ACADEMIC
 ```
 
