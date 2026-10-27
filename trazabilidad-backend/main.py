@@ -76,7 +76,7 @@ client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 Base.metadata.create_all(bind=engine)
 # --- CREAR USUARIO DE PRUEBA AUTOMÁTICO ---
 from database import SessionLocal
-import models
+
 
 def seed_usuario(db: Session):
     # Verificamos si ya existe el usuario admin leyendo desde el .env
@@ -91,11 +91,18 @@ def seed_usuario(db: Session):
     if not usuario_existente:
         nuevo_admin = models.Usuario(
             correo=admin_correo,
-            password=obtener_password_hash(admin_password)  # <--- Corregido al nombre correcto de tu función
+            password=obtener_password_hash(admin_password)
         )
         db.add(nuevo_admin)
         db.commit()
         print(f"Usuario administrador inicial creado: {admin_correo}")
+
+# --- LLAMAR A LA FUNCIÓN AL ARRANCAR ---
+_db = SessionLocal()
+try:
+    seed_usuario(_db)
+finally:
+    _db.close()
 
 # 2. Inicializar la app de FastAPI (Instancia Única)
 app = FastAPI(title="PluriOne Trace API", version="1.0")
