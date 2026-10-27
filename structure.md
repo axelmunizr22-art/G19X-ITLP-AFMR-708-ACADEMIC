@@ -26,4 +26,3 @@ G19X-ITLP-AFMR-708-ACADEMIC/
 ├── .gitignore                 # Exclusión de venv, .env, dist y trazabilidad.db
 ├── README.md                  # Documentación principal del proyecto
 
-

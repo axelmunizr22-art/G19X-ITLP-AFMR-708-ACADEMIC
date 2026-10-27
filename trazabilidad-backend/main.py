@@ -76,7 +76,7 @@ client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 Base.metadata.create_all(bind=engine)
 # --- CREAR USUARIO DE PRUEBA AUTOMÁTICO ---
 from database import SessionLocal
-import models
+
 
 def seed_usuario(db: Session):
     # Verificamos si ya existe el usuario admin leyendo desde el .env
@@ -91,11 +91,18 @@ def seed_usuario(db: Session):
     if not usuario_existente:
         nuevo_admin = models.Usuario(
             correo=admin_correo,
-            password=obtener_password_hash(admin_password)  # <--- Corregido al nombre correcto de tu función
+            password=obtener_password_hash(admin_password)
         )
         db.add(nuevo_admin)
         db.commit()
         print(f"Usuario administrador inicial creado: {admin_correo}")
+
+# --- LLAMAR A LA FUNCIÓN AL ARRANCAR ---
+_db = SessionLocal()
+try:
+    seed_usuario(_db)
+finally:
+    _db.close()
 
 # 2. Inicializar la app de FastAPI (Instancia Única)
 app = FastAPI(title="PluriOne Trace API", version="1.0")
@@ -364,29 +371,35 @@ def registrar_material(material: MaterialCreate, db: Session = Depends(get_db), 
     return nuevo_mat
 
 
-@app.put("/materiales/{id}/escanear")
-def escanear_material(id: int, datos: EscaneoUpdate, db: Session = Depends(get_db), usuario_actual = Depends(obtener_usuario_actual)):
+@app.put("/materiales/{material_id}/escanear")
+def escanear_material(
+    material_id: str,
+    datos: EscaneoUpdate,
+    db: Session = Depends(get_db),
+    usuario_actual: models.Usuario = Depends(obtener_usuario_actual)
+):
     mat = db.query(models.Material).filter(
         models.Material.id == material_id
     ).first()
+    
     if not mat:
-        raise HTTPException(status_code=404, detail="Material no encontrado.")
+        raise HTTPException(status_code=404, detail="Material no encontrado")
 
+    # Actualizar ubicación y estado actual del material
     mat.ubicacion_actual = datos.nueva_ubicacion
     mat.estado = datos.nuevo_estado
 
-    estado_final = datos.nuevo_estado
-    if datos.motivo and datos.motivo.strip():
-        estado_final = f"{datos.nuevo_estado} ({datos.motivo.strip()})"
-        mat.estado = estado_final
-
-    db.add(models.HistorialTrazabilidad(
+    # Registrar en el historial de trazabilidad
+    nuevo_historial = models.HistorialTrazabilidad(
         material_id=material_id,
         ubicacion=datos.nueva_ubicacion,
-        estado=estado_final
-    ))
+        estado=datos.nuevo_estado,
+    )
+    db.add(nuevo_historial)
     db.commit()
-    return {"mensaje": "Ubicación actualizada", "estado_actual": mat.estado}
+    db.refresh(mat)
+    
+    return {"mensaje": "Checkpoint registrado correctamente", "material_id": material_id, "estado": datos.nuevo_estado, "ubicacion": datos.nueva_ubicacion}
 
 
 @app.get("/materiales/")

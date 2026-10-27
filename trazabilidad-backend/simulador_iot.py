@@ -5,32 +5,31 @@ import os
 from dotenv import load_dotenv
 
 # Cargar variables de entorno del backend si están disponibles, o usar valores por defecto
-load_dotenv(os.path.join(os.path.dirname(__file__), 'trazabilidad-backend', '.env'))
-
+load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 API_URL = "http://localhost:8000"
 
 # Credenciales de administrador para autenticar el simulador IoT
-ADMIN_CORREO = os.getenv("ADMIN_CORREO", "admin@plurione.com")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "tu_contrasena_segura")
+ADMIN_CORREO = os.getenv("ADMIN_CORREO")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+
+if not ADMIN_CORREO or not ADMIN_PASSWORD:
+    print("[ERROR] Faltan las credenciales ADMIN_CORREO o ADMIN_PASSWORD en el archivo .env")
+    sys.exit(1)
 
 def obtener_token_jwt():
     """Se autentica en el backend para obtener un token Bearer válido."""
     login_url = f"{API_URL}/auth/login"
-    # OAuth2PasswordRequestForm espera los datos como form-data (username y password)
-    payload = {
-        "username": ADMIN_CORREO,
-        "password": ADMIN_PASSWORD
-    }
+    payload = {"correo": ADMIN_CORREO, "password": ADMIN_PASSWORD}
     try:
-        response = requests.post(login_url, data=payload)
+        response = requests.post(login_url, json=payload)
         if response.status_code == 200:
             token = response.json().get("access_token")
             return token
         else:
-            print(f" [AUTH ERROR] No se pudo autenticar el simulador: {response.text}")
+            print(f"[AUTH ERROR] No se pudo autenticar el simulador: {response.text}")
             return None
     except Exception as e:
-        print(f" [ERROR DE CONEXIÓN] No se pudo conectar al servidor de autenticación: {e}")
+        print(f"[ERROR DE CONEXIÓN] No se pudo conectar al servidor de autenticación: {e}")
         return None
 
 def generar_puntos_ruta(destino):

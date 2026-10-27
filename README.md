@@ -42,7 +42,7 @@ Antes de instalar el proyecto, asegúrate de tener:
 Clona el repositorio y entra en la carpeta principal:
 
 ```bash
-git clone [https://github.com/axelmunizr22-art/G19X-ITLP-AFMR-708-ACADEMIC.git](https://github.com/axelmunizr22-art/G19X-ITLP-AFMR-708-ACADEMIC.git)
+git clone https://github.com/axelmunizr22-art/G19X-ITLP-AFMR-708-ACADEMIC.git. 
 cd G19X-ITLP-AFMR-708-ACADEMIC
 ```
 
@@ -218,7 +218,37 @@ PluriOne Trace integra Google Gemini para ofrecer asistencia conversacional rela
 - En entornos de producción, desactiva la configuración de recarga automática de Uvicorn y utiliza una configuración de despliegue apropiada.
 
 ---
+## Simulador IoT
+
+El proyecto incluye un script emulador para enviar actualizaciones automáticas de ubicación y estado a la API simulando dispositivos IoT en campo.
+
+### ¿Cómo ejecutarlo?
+
+1. Asegúrate de tener tu entorno virtual activo y el backend encendido (`uvicorn main:app --reload`).
+2. Ejecuta el simulador pasando como argumentos el ID del material y la nueva ubicación:
+   ```bash
+   python trazabilidad-backend/simulador_iot.py MAT-101 "Monterrey"
+
+### 4. Prueba final del Simulador
+Una vez guardados los cambios:
+1. Con tu backend encendido (`uvicorn main:app --reload`), corre en tu terminal:
+   ```bash
+   python trazabilidad-backend/simulador_iot.py MAT-101 "Monterrey"
+
+## Uso de IA
+
+Se utilizó un asistente de inteligencia artificial como herramienta de apoyo técnico a lo largo del proyecto para:
+- Estructurar y optimizar los endpoints de FastAPI y los esquemas en Pydantic.
+- Resolver detalles de integración y consumo de APIs en el frontend con React + Vite.
+- Asistir en la configuración del entorno, rutas de archivos (`load_dotenv`) y la depuración del script de simulación IoT (`simulador_iot.py`).
+- Colaborar en la redacción y estructuración de la documentación técnica (`README.md`, PRD y MVP).
+
+**Criterio y validación humana:**
+El diseño del modelo de datos, la arquitectura general del sistema, las reglas de negocio, la resolución de pruebas funcionales y la validación de cada componente en entorno local fueron definidos, probados y validados directamente por el desarrollador.
+
+
 
 ##  Licencia
 
 Proyecto académico desarrollado para fines educativos y de demostración tecnológica.
+
