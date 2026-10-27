@@ -386,20 +386,20 @@ def escanear_material(
         raise HTTPException(status_code=404, detail="Material no encontrado")
 
     # Actualizar ubicación y estado actual del material
-    mat.ubicacion_actual = datos.ubicacion
-    mat.estado = datos.estado
+    mat.ubicacion_actual = datos.nueva_ubicacion
+    mat.estado = datos.nuevo_estado
 
     # Registrar en el historial de trazabilidad
     nuevo_historial = models.HistorialTrazabilidad(
         material_id=material_id,
-        ubicacion=datos.ubicacion,
-        estado=datos.estado
+        ubicacion=datos.nueva_ubicacion,
+        estado=datos.nuevo_estado,
     )
     db.add(nuevo_historial)
     db.commit()
     db.refresh(mat)
     
-    return {"mensaje": "Checkpoint registrado correctamente", "material_id": material_id, "estado": datos.estado, "ubicacion": datos.ubicacion}
+    return {"mensaje": "Checkpoint registrado correctamente", "material_id": material_id, "estado": datos.nuevo_estado, "ubicacion": datos.nueva_ubicacion}
 
 
 @app.get("/materiales/")

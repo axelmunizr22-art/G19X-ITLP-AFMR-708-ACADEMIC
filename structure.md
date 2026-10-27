@@ -44,6 +44,7 @@ G19X-ITLP-AFMR-708-ACADEMIC/
 │   ├── 📄 models.py
 │   ├── 📄 requirements.txt
 │   ├── 📄 simulador_iot.py
+│   ├── 📄 trazabilidad.db
 │   ├── 📁 venv/
 │   │   ├── 📁 Include/
 │   │   │   └── 📁 site/

@@ -92,13 +92,9 @@ export default function App() {
   setCargandoBot(true);
 
   try {
-    const token = localStorage.getItem('token'); // 1. Recuperamos el token
     const res = await axios.post(
       `${API_URL}/chatbot`, 
-      { message: textoUsuario },
-      {
-        headers: { Authorization: `Bearer ${token}` } // 2. ¡Lo adjuntamos aquí!
-      }
+      { message: textoUsuario }
     );
     setMensajesChat((prev) => [...prev, { remitente: 'bot', texto: res.data.respuesta }]);
   } catch (err) {
@@ -158,10 +154,7 @@ export default function App() {
   const cargarMateriales = async () => {
   if (!usuarioAutenticado) return;
   try {
-    const token = localStorage.getItem('token'); // Recuperar el token
-    const res = await axios.get(`${API_URL}/materiales/`, {
-      headers: { Authorization: `Bearer ${token}` } // <--- ¡Añadir esto!
-    });
+    const res = await axios.get(`${API_URL}/materiales/`);
     setMateriales(res.data);
   } catch (err) {
     console.error('Error al cargar datos:', err);
@@ -171,11 +164,10 @@ export default function App() {
 const cargarCatalogos = async () => {
   if (!usuarioAutenticado) return;
   try {
-    const token = localStorage.getItem('token'); // Recuperar el token
     const [resC, resCond, resR] = await Promise.all([
-      axios.get(`${API_URL}/clientes`, { headers: { Authorization: `Bearer ${token}` } }),
-      axios.get(`${API_URL}/conductores`, { headers: { Authorization: `Bearer ${token}` } }),
-      axios.get(`${API_URL}/rutas`, { headers: { Authorization: `Bearer ${token}` } })
+      axios.get(`${API_URL}/clientes`),
+      axios.get(`${API_URL}/conductores`),
+      axios.get(`${API_URL}/rutas`)
     ]);
     setClientes(resC.data);
     setConductores(resCond.data);
@@ -670,7 +662,7 @@ const cargarCatalogos = async () => {
       <div style={{ backgroundColor: '#ffffff', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
         <span style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', display: 'block', textTransform: 'uppercase', marginBottom: '4px' }}>Nivel de Riesgo</span>
         <span style={{ fontSize: '14px', fontWeight: '800', color: analisisIA.nivel_riesgo === 'Alto' ? '#dc2626' : analisisIA.nivel_riesgo === 'Medio' ? '#d97706' : '#16a34a' }}>
-          {analisisIA.nivel_riesgo} ({analisisIA.indice_confiabilidad || '15'}%)
+          {analisisIA.nivel_riesgo} ({analisisIA.porcentaje_evaluado ?? 0}%)
         </span>
       </div>
 
@@ -678,8 +670,9 @@ const cargarCatalogos = async () => {
       <div style={{ backgroundColor: '#ffffff', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
         <span style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', display: 'block', textTransform: 'uppercase', marginBottom: '4px' }}>Checkpoints con Retraso</span>
         <span style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a' }}>
-          {analisisIA.incidentes_registrados || 0} de {analisisIA.total_checkpoints || 1} registrados
+          {analisisIA.checkpoints_retrasados ?? 0} de {analisisIA.checkpoints_totales ?? 0} registrados
         </span>
+
       </div>
 
     </div>
