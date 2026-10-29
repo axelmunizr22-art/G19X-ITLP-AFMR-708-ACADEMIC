@@ -394,6 +394,7 @@ def escanear_material(
         material_id=material_id,
         ubicacion=datos.nueva_ubicacion,
         estado=datos.nuevo_estado,
+        motivo=datos.motivo or None
     )
     db.add(nuevo_historial)
     db.commit()
@@ -464,6 +465,7 @@ def obtener_guia_material(
             {
                 "ubicacion": h.ubicacion,
                 "estado": h.estado,
+                "motivo": h.motivo,  # <--- EL MOTIVO DEBE IR AQUÍ DENTRO DE CADA HISTORIAL
                 "fecha_hora": str(h.fecha_hora).replace("T", " ")[:19]
             }
             for h in historial

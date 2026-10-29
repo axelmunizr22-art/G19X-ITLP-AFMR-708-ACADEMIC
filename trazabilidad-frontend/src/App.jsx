@@ -718,6 +718,7 @@ const cargarCatalogos = async () => {
                             <th style={{ padding: '6px 8px', borderBottom: '1px solid #cbd5e1' }}>Fecha y Hora</th>
                             <th style={{ padding: '6px 8px', borderBottom: '1px solid #cbd5e1' }}>Ubicación</th>
                             <th style={{ padding: '6px 8px', borderBottom: '1px solid #cbd5e1' }}>Estado Registrado</th>
+                            <th style={{ padding: '6px 8px', borderBottom: '1px solid #cbd5e1' }}>Motivo</th>
                           </tr>
                         </thead>
                         <tbody style={{ fontSize: '13px' }}>
@@ -732,6 +733,9 @@ const cargarCatalogos = async () => {
         </td>
         <td style={{ padding: '6px 8px', color: h.estado?.includes('Retrasado') ? '#dc2626' : '#0284c7' }}>
           {h.estado}
+        </td>
+        <td style={{ padding: '6px 8px', color: '#475569' }}>
+          {h.motivo || '—'}
         </td>
       </tr>
     );
