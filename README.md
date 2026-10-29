@@ -229,12 +229,6 @@ El proyecto incluye un script emulador para enviar actualizaciones automáticas 
    ```bash
    python trazabilidad-backend/simulador_iot.py MAT-101 "Monterrey"
 
-### 4. Prueba final del Simulador
-Una vez guardados los cambios:
-1. Con tu backend encendido (`uvicorn main:app --reload`), corre en tu terminal:
-   ```bash
-   python trazabilidad-backend/simulador_iot.py MAT-101 "Monterrey"
-
 ## Uso de IA
 
 Se utilizó un asistente de inteligencia artificial como herramienta de apoyo técnico a lo largo del proyecto para:
