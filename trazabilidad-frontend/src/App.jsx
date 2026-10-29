@@ -24,6 +24,29 @@ export default function App() {
   const [modoAuth, setModoAuth] = useState('login');
   const [notificacionToast, setNotificacionToast] = useState(null);
 
+  const cerrarSesion = (aviso) => {
+    localStorage.removeItem('token');
+    setUsuarioAutenticado(null);
+    if (aviso && typeof setNotificacionToast === 'function') {
+      setNotificacionToast({ tipo: 'error', mensaje: aviso });
+    } else if (aviso) {
+      alert(aviso);
+    }
+  };
+
+  useEffect(() => {
+    const id = axios.interceptors.response.use(
+      (res) => res,
+      (error) => {
+        const esLogin = error.config?.url?.includes('/auth/login');
+        if (error.response?.status === 401 && !esLogin) {
+          cerrarSesion('Tu sesión venció, vuelve a entrar.');
+        }
+        return Promise.reject(error);
+      }
+    );
+    return () => axios.interceptors.response.eject(id);
+  }, []);
   const lanzarNotificacion = (titulo, detalle) => {
     setNotificacionToast({ titulo, detalle });
     setTimeout(() => {
@@ -480,7 +503,7 @@ const cargarCatalogos = async () => {
             <b>Usuario:</b> {usuarioAutenticado}
           </p>
           <button 
-            onClick={() => setUsuarioAutenticado(null)}
+            onClick={() => cerrarSesion()}
             style={{ width: '100%', backgroundColor: '#ef4444', color: '#ffffff', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: '700', cursor: 'pointer' }}
           >
             Cerrar Sesión
