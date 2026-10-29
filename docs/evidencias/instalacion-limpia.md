@@ -1,4 +1,4 @@
-# Instalación en carpeta limpia y validación de MVP — 28 de octubre de 2026 · Commit: clean-final
+# Instalación en carpeta limpia y validación de MVP — 28 de octubre de 2026 · Commit: 0758853
 
 | Paso | Qué hice | Resultado | Tiempo |
 |---|---|---|---|
