@@ -24,6 +24,29 @@ export default function App() {
   const [modoAuth, setModoAuth] = useState('login');
   const [notificacionToast, setNotificacionToast] = useState(null);
 
+  const cerrarSesion = (aviso) => {
+    localStorage.removeItem('token');
+    setUsuarioAutenticado(null);
+    if (aviso && typeof setNotificacionToast === 'function') {
+      setNotificacionToast({ tipo: 'error', mensaje: aviso });
+    } else if (aviso) {
+      alert(aviso);
+    }
+  };
+
+  useEffect(() => {
+    const id = axios.interceptors.response.use(
+      (res) => res,
+      (error) => {
+        const esLogin = error.config?.url?.includes('/auth/login');
+        if (error.response?.status === 401 && !esLogin) {
+          cerrarSesion('Tu sesión venció, vuelve a entrar.');
+        }
+        return Promise.reject(error);
+      }
+    );
+    return () => axios.interceptors.response.eject(id);
+  }, []);
   const lanzarNotificacion = (titulo, detalle) => {
     setNotificacionToast({ titulo, detalle });
     setTimeout(() => {
@@ -480,7 +503,7 @@ const cargarCatalogos = async () => {
             <b>Usuario:</b> {usuarioAutenticado}
           </p>
           <button 
-            onClick={() => setUsuarioAutenticado(null)}
+            onClick={() => cerrarSesion()}
             style={{ width: '100%', backgroundColor: '#ef4444', color: '#ffffff', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: '700', cursor: 'pointer' }}
           >
             Cerrar Sesión
@@ -688,11 +711,28 @@ const cargarCatalogos = async () => {
         <strong style={{ color: '#1d4ed8', display: 'block', marginBottom: '2px', fontSize: '11px' }}>RECOMENDACIÓN OPERATIVA:</strong>
         <span style={{ color: '#1e3a8a', lineHeight: '1.4' }}>{analisisIA.recomendacion || "Tránsito estándar dentro de los parámetros esperados por el sistema."}</span>
       </div>
+
+      {/* NUEVO: Recuadro con los minutos reales vs estimados y distancia de ruta */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '4px' }}>
+        <div style={{ backgroundColor: '#f8fafc', padding: '8px 10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+          <span style={{ fontSize: '10px', color: '#64748b', display: 'block', fontWeight: 'bold' }}>TIEMPO EN TRÁNSITO:</span>
+          <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#0f172a' }}>{analisisIA.minutos_en_transito || 0} min</span>
+        </div>
+        <div style={{ backgroundColor: '#f8fafc', padding: '8px 10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+          <span style={{ fontSize: '10px', color: '#64748b', display: 'block', fontWeight: 'bold' }}>TIEMPO ESTIMADO:</span>
+          <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#2563eb' }}>
+            {analisisIA.minutos_estimados ? `${analisisIA.minutos_estimados} min` : "Por definir"}
+          </span>
+        </div>
+      </div>
+
+      <div style={{ fontSize: '11px', color: '#64748b', textAlign: 'right', marginTop: '2px' }}>
+        📏 <strong>Distancia de la ruta:</strong> {analisisIA.distancia_km_ruta} km
+      </div>
     </div>
 
   </div>
 )}
-
 
 
 {/* Código QR interactivo de la guía */}
@@ -718,6 +758,7 @@ const cargarCatalogos = async () => {
                             <th style={{ padding: '6px 8px', borderBottom: '1px solid #cbd5e1' }}>Fecha y Hora</th>
                             <th style={{ padding: '6px 8px', borderBottom: '1px solid #cbd5e1' }}>Ubicación</th>
                             <th style={{ padding: '6px 8px', borderBottom: '1px solid #cbd5e1' }}>Estado Registrado</th>
+                            <th style={{ padding: '6px 8px', borderBottom: '1px solid #cbd5e1' }}>Motivo</th>
                           </tr>
                         </thead>
                         <tbody style={{ fontSize: '13px' }}>
@@ -732,6 +773,9 @@ const cargarCatalogos = async () => {
         </td>
         <td style={{ padding: '6px 8px', color: h.estado?.includes('Retrasado') ? '#dc2626' : '#0284c7' }}>
           {h.estado}
+        </td>
+        <td style={{ padding: '6px 8px', color: '#475569' }}>
+          {h.motivo || '—'}
         </td>
       </tr>
     );

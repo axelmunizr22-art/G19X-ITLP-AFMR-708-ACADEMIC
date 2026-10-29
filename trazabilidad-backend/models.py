@@ -82,6 +82,7 @@ class HistorialTrazabilidad(Base):
     material_id = Column(String, ForeignKey("materiales.id"), nullable=False)
     ubicacion = Column(String, nullable=False)
     estado = Column(String, nullable=False)
+    motivo = Column(String, nullable=True)  
     fecha_hora = Column(DateTime, default=datetime.utcnow)
 
     material_rel = relationship("Material", back_populates="historial")

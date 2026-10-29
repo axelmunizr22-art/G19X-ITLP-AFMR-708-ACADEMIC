@@ -58,6 +58,15 @@ from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+def minutos_estimados(texto: str | None) -> int | None:
+    if not texto or "definir" in texto.lower():
+        return None
+    m = re.search(r"(\d+(?:\.\d+)?)\s*(h|hora|min)", texto.lower())
+    if not m:
+        return None
+    valor = float(m.group(1))
+    return int(valor * 60) if m.group(2).startswith("h") else int(valor)
+
 def obtener_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
@@ -394,6 +403,7 @@ def escanear_material(
         material_id=material_id,
         ubicacion=datos.nueva_ubicacion,
         estado=datos.nuevo_estado,
+        motivo=datos.motivo or None
     )
     db.add(nuevo_historial)
     db.commit()
@@ -464,6 +474,7 @@ def obtener_guia_material(
             {
                 "ubicacion": h.ubicacion,
                 "estado": h.estado,
+                "motivo": h.motivo,  # <--- EL MOTIVO DEBE IR AQUÍ DENTRO DE CADA HISTORIAL
                 "fecha_hora": str(h.fecha_hora).replace("T", " ")[:19]
             }
             for h in historial
@@ -744,14 +755,19 @@ def obtener_analisis_ia_material(
     if not material:
         raise HTTPException(status_code=404, detail="El material no existe.")
 
-    # Consultar historial real de eventos del material
+    # Consultar historial real de eventos del material ordenado cronológicamente
     historial = db.query(models.HistorialTrazabilidad).filter(
         models.HistorialTrazabilidad.material_id == material_id
-    ).all()
+    ).order_by(models.HistorialTrazabilidad.fecha_hora.asc()).all()
 
     conteo_puntos = len(historial)
     
-    # Contar cuántos checkpoints reales tienen incidencia de "Retraso" o "Alerta"
+    # Calcular tiempo en tránsito en minutos desde el primer hasta el último evento
+    minutos_transcurridos = 0
+    if len(historial) >= 2 and historial[0].fecha_hora and historial[-1].fecha_hora:
+        minutos_transcurridos = int((historial[-1].fecha_hora - historial[0].fecha_hora).total_seconds() / 60)
+
+    # Contar checkpoints con retraso o alerta
     checkpoints_retrasados = sum(
         1 for h in historial 
         if h.estado and ("retrasado" in h.estado.lower() or "alerta" in h.estado.lower())
@@ -759,35 +775,51 @@ def obtener_analisis_ia_material(
 
     estado_actual = (material.estado or "").lower()
 
-    # Obtener datos de la ruta asignada (si tiene relación)
+    # Obtener datos de la ruta asignada
     tiempo_estimado_str = "N/A"
+    t_estimados_min = None
     distancia_km = 0
     if getattr(material, "ruta_rel", None):
         tiempo_estimado_str = material.ruta_rel.tiempo_estimado or "N/A"
+        t_estimados_min = minutos_estimados(tiempo_estimado_str)
         distancia_km = material.ruta_rel.distancia_km or 0
 
-    # Lógica inteligente basada en métricas reales de la BD
-    if checkpoints_retrasados > 0 or "retrasado" in estado_actual:
-        nivel_riesgo = "Alto"
-        porcentaje_confianza_o_riesgo = min(95.0, 70.0 + (checkpoints_retrasados * 10.0))
-        diagnostico = f"Se detectaron {checkpoints_retrasados} checkpoints con retraso sobre un total de {conteo_puntos} registros. El trayecto presenta desviaciones respecto al tiempo estimado ({tiempo_estimado_str})."
-        recomendacion = "Contactar al operador logístico inmediatamente para reprogramar la ruta."
-    elif "entregado" in estado_actual:
+    # Lógica inteligente basada en tiempo real vs estimado y métricas de BD
+    porcentaje_confianza_o_riesgo = 45.0
+    
+    if "entregado" in estado_actual:
         nivel_riesgo = "Bajo"
         porcentaje_confianza_o_riesgo = 100.0
         diagnostico = f"Envío completado exitosamente. Se validaron {conteo_puntos} puntos de control sin incidencias críticas."
         recomendacion = "Archivar guía de despacho y cerrar ciclo operativo."
+    elif t_estimados_min and minutos_transcurridos > t_estimados_min:
+        nivel_riesgo = "Alto"
+        porcentaje_confianza_o_riesgo = 95.0
+        diagnostico = f"Alerta crítica: El envío excede el tiempo estimado ({minutos_transcurridos} min transcurridos vs {t_estimados_min} min estimados). Ruta de {distancia_km} km de la ruta."
+        recomendacion = "Contactar al operador logístico inmediatamente para reprogramar la ruta."
+    elif checkpoints_retrasados > 0 or "retrasado" in estado_actual:
+        nivel_riesgo = "Alto"
+        porcentaje_confianza_o_riesgo = 85.0
+        diagnostico = f"Se detectaron {checkpoints_retrasados} checkpoints con retraso. Trayecto analizado con base en ruta de {distancia_km} km de la ruta."
+        recomendacion = "Supervisar bitácora de incidencias del transportista."
     else:
-        if conteo_puntos > 2:
-            nivel_riesgo = "Medio"
-            porcentaje_confianza_o_riesgo = 45.0
-            diagnostico = f"El paquete acumula {conteo_puntos} checkpoints en tránsito normal ({distancia_km} km recorridos). Se sugiere supervisión preventiva."
-            recomendacion = "Monitorear llegada al próximo punto de control."
+        if t_estimados_min and t_estimados_min > 0:
+            porcentaje_uso = (minutos_transcurridos / t_estimados_min) * 100
+            if porcentaje_uso >= 80:
+                nivel_riesgo = "Medio"
+                porcentaje_confianza_o_riesgo = 75.0
+                diagnostico = f"Precaución: El envío se encuentra al {int(porcentaje_uso)}% del tiempo estimado ({minutos_transcurridos}/{t_estimados_min} min) en una ruta de {distancia_km} km de la ruta."
+                recomendacion = "Monitorear de cerca la aproximación al destino."
+            else:
+                nivel_riesgo = "Bajo"
+                porcentaje_confianza_o_riesgo = 30.0
+                diagnostico = f"Tránsito normal. {minutos_transcurridos} min transcurridos de {t_estimados_min} min estimados ({distancia_km} km de la ruta total)."
+                recomendacion = "Tránsito estándar dentro de los parámetros esperados."
         else:
             nivel_riesgo = "Bajo"
-            porcentaje_confianza_o_riesgo = 15.0
-            diagnostico = f"Inicia la trazabilidad del material. {conteo_puntos} checkpoints iniciales registrados."
-            recomendacion = "Tránsito estándar dentro de los parámetros esperados."
+            porcentaje_confianza_o_riesgo = 20.0
+            diagnostico = f"El paquete acumula {conteo_puntos} checkpoints en tránsito ({distancia_km} km de la ruta). Tiempo estimado por definir."
+            recomendacion = "Monitorear llegada al próximo punto de control."
 
     return {
         "material_id": material.id,
@@ -799,6 +831,9 @@ def obtener_analisis_ia_material(
         "checkpoints_totales": conteo_puntos,
         "checkpoints_retrasados": checkpoints_retrasados,
         "tiempo_estimado_ruta": tiempo_estimado_str,
+        "minutos_en_transito": minutos_transcurridos,
+        "minutos_estimados": t_estimados_min,
+        "distancia_km_ruta": distancia_km,
         "diagnostico_ia": diagnostico,
         "recomendacion": recomendacion
-    }
+}

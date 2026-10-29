@@ -1,4 +1,4 @@
-# Instalación en carpeta limpia y validación de MVP — 27 de octubre de 2026 · Commit: clean-final
+# Instalación en carpeta limpia y validación de MVP — 28 de octubre de 2026 · Commit: 0758853
 
 | Paso | Qué hice | Resultado | Tiempo |
 |---|---|---|---|
@@ -9,4 +9,5 @@
 | **5** | Instalación de dependencias del frontend (`npm install`) y ejecución con `npm run dev`. | Interfaz SPA web corriendo sin errores en `http://localhost:5173`. | 4 min |
 | **6** | Inicio de sesión con el administrador, registro del material `MAT-101`, asignación de su respectivo conductor y ruta. | Material registrado y vinculado correctamente en la base de datos relacional. | 2 min |
 | **7** | Registro manual de un checkpoint de avance para el material `MAT-101` mediante el formulario de escaneo. | Evento insertado exitosamente en la bitácora de trazabilidad con actualización de ubicación y estado. | 1 min |
-| **8** | Apertura de la vista de guía detallada, descarga del comprobante en PDF y prueba del Chatbot con IA consultando datos del paquete. | Guía visualizada, PDF exportado correctamente mediante `html2pdf.js` y respuestas conversacionales de Gemini generadas con éxito usando el contexto de la base de datos. | 3 min |
+| **8** | Ejecución de la prueba del simulador IoT: `python trazabilidad-backend/simulador_iot.py MAT-101 "Monterrey"`. | Script conectado correctamente a la API, autenticándose con las credenciales de administrador y enviando la actualización de ubicación con éxito. | 2 min |
+| **9** | Apertura de la vista de guía detallada, descarga del comprobante en PDF y prueba del Chatbot con IA consultando datos del paquete. | Guía visualizada, PDF exportado correctamente mediante `html2pdf.js` y respuestas conversacionales de Gemini generadas con éxito usando el contexto de la base de datos. | 3 min |
