@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import html2pdf from 'html2pdf.js';
 import { QRCodeCanvas } from 'qrcode.react';
+import Login from './components/Login';
+import PanelAnalisisIA from './components/PanelAnalisisIA';
 
 const API_URL = 'http://localhost:8000';
 // Interceptor global para que Axios agregue el token automáticamente a CADA petición
@@ -297,169 +299,21 @@ const cargarCatalogos = async () => {
   });
 
   // PANTALLA DE AUTENTICACIÓN
-  if (!usuarioAutenticado) {
-    return (
-      <div style={{
-        backgroundColor: '#0b1329',
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-        position: 'relative'
-      }}>
-        <style>{`
-          @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-20px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-          }
-          .anim-alerta { animation: slideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        `}</style>
-
-        {alertaAuth && (
-          <div className="anim-alerta" style={{
-            position: 'absolute',
-            top: '28px',
-            backgroundColor: alertaAuth.tipo === 'exito' ? '#10b981' : '#ef4444',
-            color: '#ffffff',
-            padding: '14px 24px',
-            borderRadius: '12px',
-            boxShadow: '0 10px 25px -5px rgba(0,0,0,0.4)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            fontWeight: '700',
-            fontSize: '14px',
-            zIndex: 100
-          }}>
-            <span style={{
-              backgroundColor: 'rgba(255,255,255,0.25)',
-              borderRadius: '50%',
-              width: '24px',
-              height: '24px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              {alertaAuth.tipo === 'exito' ? '✓' : '✕'}
-            </span>
-            {alertaAuth.mensaje}
-          </div>
-        )}
-
-        <div style={{
-          backgroundColor: '#ffffff',
-          width: '100%',
-          maxWidth: '420px',
-          borderRadius: '16px',
-          padding: '40px 32px',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)',
-          boxSizing: 'border-box'
-        }}>
-          <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-            <h1 style={{ margin: 0, fontSize: '26px', fontWeight: '800', color: '#0f172a' }}>PluriOne Trace</h1>
-            <p style={{ margin: '6px 0 0 0', fontSize: '14px', color: '#64748b' }}>
-              {modoAuth === 'login' && 'Ingresa tus credenciales para acceder'}
-              {modoAuth === 'register' && 'Crea tu cuenta para comenzar'}
-              {modoAuth === 'recuperar' && 'Ingresa tu correo y nueva contraseña'}
-            </p>
-          </div>
-
-          <form onSubmit={handleAuthSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {/* Correo Electrónico (Siempre visible) */}
-  <div>
-    <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#334155', marginBottom: '6px' }}>
-      Correo Electrónico
-    </label>
-    <input
-      type="email"
-      placeholder="usuario@develop.com.mx"
-      value={formAuth.correo}
-      onChange={(e) => setFormAuth({ ...formAuth, correo: e.target.value })}
-      style={{ width: '100%', padding: '12px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box', outline: 'none' }}
-      required
+if (!usuarioAutenticado) {
+  return (
+    <Login
+      formAuth={formAuth}
+      setFormAuth={setFormAuth}
+      onSubmit={handleAuthSubmit}
+      modoAuth={modoAuth}
+      setModoAuth={setModoAuth}
+      alertaAuth={alertaAuth}
+      setAlertaAuth={setAlertaAuth}
     />
-  </div>
+  );
+}
 
-  {/* SI ESTAMOS EN MODO RECUPERAR: Mostramos Contraseña Actual y Nueva Contraseña */}
-  {modoAuth === 'recuperar' ? (
-    <>
-      <div>
-        <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#334155', marginBottom: '6px' }}>
-          Contraseña Actual
-        </label>
-        <input
-          type="password"
-          placeholder="••••••••"
-          value={formAuth.password_actual || ''}
-          onChange={(e) => setFormAuth({ ...formAuth, password_actual: e.target.value })}
-          style={{ width: '100%', padding: '12px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box', outline: 'none' }}
-          required
-        />
-      </div>
-
-      <div>
-        <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#334155', marginBottom: '6px' }}>
-          Nueva Contraseña
-        </label>
-        <input
-          type="password"
-          placeholder="••••••••"
-          value={formAuth.nueva_password || ''}
-          onChange={(e) => setFormAuth({ ...formAuth, nueva_password: e.target.value })}
-          style={{ width: '100%', padding: '12px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box', outline: 'none' }}
-          required
-        />
-      </div>
-    </>
-  ) : (
-    /* SI ES LOGIN O REGISTRO: Mostramos un solo campo de contraseña normal */
-    <div>
-      <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#334155', marginBottom: '6px' }}>
-        Contraseña
-      </label>
-      <input
-        type="password"
-        placeholder="••••••••"
-        value={formAuth.password || ''}
-        onChange={(e) => setFormAuth({ ...formAuth, password: e.target.value })}
-        style={{ width: '100%', padding: '12px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box', outline: 'none' }}
-        required
-      />
-    </div>
-  )}
-
-  <button
-    type="submit"
-    style={{ backgroundColor: '#2563eb', color: '#ffffff', border: 'none', padding: '14px', borderRadius: '8px', fontSize: '15px', fontWeight: '700', cursor: 'pointer', marginTop: '8px' }}
-  >
-    {modoAuth === 'login' && 'Iniciar Sesión'}
-    {modoAuth === 'register' && 'Registrar Cuenta'}
-    {modoAuth === 'recuperar' && 'Actualizar Contraseña'}
-  </button>
-          </form>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px', fontSize: '13px' }}>
-            {modoAuth === 'login' ? (
-              <>
-                <button onClick={() => { setAlertaAuth(null); setModoAuth('recuperar'); }} style={{ background: 'none', border: 'none', color: '#2563eb', fontWeight: '700', cursor: 'pointer', padding: 0 }}>
-                  ¿Olvidaste tu contraseña?
-                </button>
-                <button onClick={() => { setAlertaAuth(null); setModoAuth('register'); }} style={{ background: 'none', border: 'none', color: '#2563eb', fontWeight: '700', cursor: 'pointer', padding: 0 }}>
-                  Crear cuenta
-                </button>
-              </>
-            ) : (
-              <button onClick={() => { setAlertaAuth(null); setModoAuth('login'); }} style={{ background: 'none', border: 'none', color: '#2563eb', fontWeight: '700', cursor: 'pointer', padding: 0, margin: '0 auto' }}>
-                Volver a Iniciar Sesión
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  
   // PANEL DENTRO DEL SISTEMA
   return (
     <div style={{ display: 'flex', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif', backgroundColor: '#f1f5f9' }}>
@@ -667,72 +521,7 @@ const cargarCatalogos = async () => {
                         </div>
                       </div>
                       {/* Diagnóstico Inteligente de Riesgo (IA) - Estilo Ejecutivo */}
-{analisisIA && (
-  <div style={{ marginTop: '20px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-    
-    {/* Encabezado */}
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
-      <span style={{ fontSize: '18px' }}>🤖</span>
-      <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '700', color: '#0f172a' }}>
-        Diagnóstico Inteligente de Riesgo (IA)
-      </h3>
-    </div>
-
-    {/* Tarjetas de métricas en dos columnas */}
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-      
-      {/* Tarjeta Nivel de Riesgo */}
-      <div style={{ backgroundColor: '#ffffff', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
-        <span style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', display: 'block', textTransform: 'uppercase', marginBottom: '4px' }}>Nivel de Riesgo</span>
-        <span style={{ fontSize: '14px', fontWeight: '800', color: analisisIA.nivel_riesgo === 'Alto' ? '#dc2626' : analisisIA.nivel_riesgo === 'Medio' ? '#d97706' : '#16a34a' }}>
-          {analisisIA.nivel_riesgo} ({analisisIA.porcentaje_evaluado ?? 0}%)
-        </span>
-      </div>
-
-      {/* Tarjeta Checkpoints */}
-      <div style={{ backgroundColor: '#ffffff', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
-        <span style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', display: 'block', textTransform: 'uppercase', marginBottom: '4px' }}>Checkpoints con Retraso</span>
-        <span style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a' }}>
-          {analisisIA.checkpoints_retrasados ?? 0} de {analisisIA.checkpoints_totales ?? 0} registrados
-        </span>
-
-      </div>
-
-    </div>
-
-    {/* Bloques de Texto Descriptivo */}
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px' }}>
-      <div style={{ backgroundColor: '#ffffff', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-        <strong style={{ color: '#475569', display: 'block', marginBottom: '2px', fontSize: '11px' }}>DIAGNÓSTICO DEL TRAYECTO:</strong>
-        <span style={{ color: '#0f172a', lineHeight: '1.4' }}>{analisisIA.diagnostico_ia || analisisIA.diagnostico}</span>
-      </div>
-
-      <div style={{ backgroundColor: '#eff6ff', padding: '10px 12px', borderRadius: '6px', border: '1px solid #bfdbfe' }}>
-        <strong style={{ color: '#1d4ed8', display: 'block', marginBottom: '2px', fontSize: '11px' }}>RECOMENDACIÓN OPERATIVA:</strong>
-        <span style={{ color: '#1e3a8a', lineHeight: '1.4' }}>{analisisIA.recomendacion || "Tránsito estándar dentro de los parámetros esperados por el sistema."}</span>
-      </div>
-
-      {/* NUEVO: Recuadro con los minutos reales vs estimados y distancia de ruta */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '4px' }}>
-        <div style={{ backgroundColor: '#f8fafc', padding: '8px 10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-          <span style={{ fontSize: '10px', color: '#64748b', display: 'block', fontWeight: 'bold' }}>TIEMPO EN TRÁNSITO:</span>
-          <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#0f172a' }}>{analisisIA.minutos_en_transito || 0} min</span>
-        </div>
-        <div style={{ backgroundColor: '#f8fafc', padding: '8px 10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-          <span style={{ fontSize: '10px', color: '#64748b', display: 'block', fontWeight: 'bold' }}>TIEMPO ESTIMADO:</span>
-          <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#2563eb' }}>
-            {analisisIA.minutos_estimados ? `${analisisIA.minutos_estimados} min` : "Por definir"}
-          </span>
-        </div>
-      </div>
-
-      <div style={{ fontSize: '11px', color: '#64748b', textAlign: 'right', marginTop: '2px' }}>
-        📏 <strong>Distancia de la ruta:</strong> {analisisIA.distancia_km_ruta} km
-      </div>
-    </div>
-
-  </div>
-)}
+<PanelAnalisisIA analisisIA={analisisIA} />
 
 
 {/* Código QR interactivo de la guía */}

@@ -108,7 +108,7 @@ cp .env.example .env
 Abre el archivo `.env` y configura las variables necesarias:
 
 ```env
-ADMIN_CORREO=admin@plurione.com
+ADMIN_CORREO=admin@plurionetrace.com
 ADMIN_PASSWORD=tu_contrasena_segura
 GEMINI_API_KEY=tu_clave_de_api_de_gemini
 SECRET_KEY=tu_llave_secreta_jwt_super_segura
@@ -195,10 +195,11 @@ Para acceder al sistema:
 
 Los permisos y las funciones disponibles están protegidos mediante tokens de acceso (JWT) para garantizar la seguridad del sistema.
 
-##  Base de datos
+## Base de datos
 
+El proyecto usa SQLite. El archivo `trazabilidad.db` se crea solo al iniciar el backend.
 
-El proyecto utiliza SQLite para almacenar la información de trazabilidad. El archivo trazabilidad.db se genera automáticamente de forma local al iniciar el backend.
+Si actualizas el proyecto y cambió el modelo (por ejemplo, la columna `motivo` del historial), borra `trazabilidad.db` antes de arrancar: `create_all` crea tablas nuevas, pero no agrega columnas a las que ya existen.
 
 ---
 
@@ -225,11 +226,13 @@ El proyecto incluye un script emulador para enviar actualizaciones automáticas 
 ### ¿Cómo ejecutarlo?
 
 1. Asegúrate de tener tu entorno virtual activo y el backend encendido (`uvicorn main:app --reload`).
-2. Ejecuta el simulador pasando como argumentos el ID del material y la nueva ubicación:
+2. Ejecuta el simulador pasando como argumentos el código del material y la ciudad destino:
+
    ```bash
    python trazabilidad-backend/simulador_iot.py MAT-101 "Monterrey"
+   ```
 
-## Uso de IA
+### Uso de IA
 
 Se utilizó un asistente de inteligencia artificial como herramienta de apoyo técnico a lo largo del proyecto para:
 - Estructurar y optimizar los endpoints de FastAPI y los esquemas en Pydantic.
@@ -251,6 +254,15 @@ El sistema de trazabilidad incorpora un motor de diagnóstico inteligente que ev
    -  **Riesgo Medio**: Si el envío ha consumido el 80% o más del tiempo estimado de la ruta.
    -  **Riesgo Bajo**: Si el trayecto opera dentro de los parámetros normales esperados.
 4. **Corrección Métrica**: Se sustituyó el concepto ambiguo de «kilómetros recorridos» por la métrica precisa de **«km de la ruta»**, reflejando la distancia total planeada del trayecto asignado.
+
+## Pruebas Automáticas
+
+Para ejecutar la suite de pruebas unitarias y de integración con `pytest`:
+
+```bash
+cd trazabilidad-backend
+pytest
+```
 
 
 

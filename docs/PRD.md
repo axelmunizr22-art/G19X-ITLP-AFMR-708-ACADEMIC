@@ -92,4 +92,4 @@ Transformar la gestión de inventarios y envíos dentro de la cadena de suminist
 * **Dependencia:** Conexión a Internet estable en el servidor backend para realizar peticiones HTTPS a la API de Google Gemini.
 * **Dependencia:** Servidor Uvicorn ejecutándose localmente o en entorno de despliegue sobre Python 3.10+.
 * **Supuesto:** La base de datos SQLite `trazabilidad.db` mantiene la integridad referencial entre clientes, conductores, rutas y materiales registrados.
-* **Supuesto:** Cuenta con API Key de Google AI Studio con cuota activa para llamadas al modelo `gemini-3.6-flash`. 
+* **Supuesto:** Cuenta con API Key de Google AI Studio con cuota activa para llamadas al modelo `gemini-2.5-flash`. 
