@@ -727,7 +727,7 @@ const cargarCatalogos = async () => {
       </div>
 
       <div style={{ fontSize: '11px', color: '#64748b', textAlign: 'right', marginTop: '2px' }}>
-        📏 <strong>Distancia de la ruta:</strong> {analisisIA.distancia_km_ruta} km
+        📏 <strong>Distancia de la ruta:</strong> {analisisIA.distancia_km_ruta} 
       </div>
     </div>
 
