@@ -108,7 +108,7 @@ cp .env.example .env
 Abre el archivo `.env` y configura las variables necesarias:
 
 ```env
-ADMIN_CORREO=admin@plurione.com
+ADMIN_CORREO=admin@plurionetrace.com
 ADMIN_PASSWORD=tu_contrasena_segura
 GEMINI_API_KEY=tu_clave_de_api_de_gemini
 SECRET_KEY=tu_llave_secreta_jwt_super_segura
@@ -195,10 +195,11 @@ Para acceder al sistema:
 
 Los permisos y las funciones disponibles están protegidos mediante tokens de acceso (JWT) para garantizar la seguridad del sistema.
 
-##  Base de datos
+## Base de datos
 
+El proyecto usa SQLite. El archivo `trazabilidad.db` se crea solo al iniciar el backend.
 
-El proyecto utiliza SQLite para almacenar la información de trazabilidad. El archivo trazabilidad.db se genera automáticamente de forma local al iniciar el backend.
+Si actualizas el proyecto y cambió el modelo (por ejemplo, la columna `motivo` del historial), borra `trazabilidad.db` antes de arrancar: `create_all` crea tablas nuevas, pero no agrega columnas a las que ya existen.
 
 ---
 
