@@ -225,11 +225,13 @@ El proyecto incluye un script emulador para enviar actualizaciones automáticas 
 ### ¿Cómo ejecutarlo?
 
 1. Asegúrate de tener tu entorno virtual activo y el backend encendido (`uvicorn main:app --reload`).
-2. Ejecuta el simulador pasando como argumentos el ID del material y la nueva ubicación:
+2. Ejecuta el simulador pasando como argumentos el código del material y la ciudad destino:
+
    ```bash
    python trazabilidad-backend/simulador_iot.py MAT-101 "Monterrey"
+   ```
 
-## Uso de IA
+### Uso de IA
 
 Se utilizó un asistente de inteligencia artificial como herramienta de apoyo técnico a lo largo del proyecto para:
 - Estructurar y optimizar los endpoints de FastAPI y los esquemas en Pydantic.
