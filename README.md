@@ -255,6 +255,15 @@ El sistema de trazabilidad incorpora un motor de diagnóstico inteligente que ev
    -  **Riesgo Bajo**: Si el trayecto opera dentro de los parámetros normales esperados.
 4. **Corrección Métrica**: Se sustituyó el concepto ambiguo de «kilómetros recorridos» por la métrica precisa de **«km de la ruta»**, reflejando la distancia total planeada del trayecto asignado.
 
+## Pruebas Automáticas
+
+Para ejecutar la suite de pruebas unitarias y de integración con `pytest`:
+
+```bash
+cd trazabilidad-backend
+pytest
+```
+
 
 
 ##  Licencia
