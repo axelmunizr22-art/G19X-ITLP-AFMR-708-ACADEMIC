@@ -106,10 +106,35 @@ def seed_usuario(db: Session):
         db.commit()
         print(f"Usuario administrador inicial creado: {admin_correo}")
 
-# --- LLAMAR A LA FUNCIÓN AL ARRANCAR ---
+
+# NUEVA FUNCIÓN PARA CREAR LAS RUTAS DE PRUEBA AL ARRANCAR 
+RUTAS_DEMO = [
+    ('Tijuana, BCN', '2800', '40 horas'),
+    ('Chiapas, CHP', '1100', '16 horas'),
+    ('Guadalajara, JAL', '540', '7 horas'),
+    ('Monterrey, NLE', '900', '2 min'),  # Ruta corta para la demostración de riesgo
+]
+
+def seed_rutas(db: Session):
+    for destino, km, tiempo in RUTAS_DEMO:
+        existe = db.query(models.Ruta).filter(models.Ruta.destino == destino).first()
+        if not existe:
+            db.add(models.Ruta(
+                nombre_ruta=f'Ruta hacia {destino}',
+                origen='Ciudad de México',
+                destino=destino,
+                distancia_km=km,
+                tiempo_estimado=tiempo,
+            ))
+    db.commit()
+    print("Rutas de demostración inicializadas correctamente.")
+
+
+#LLAMAR A LAS FUNCIONES AL ARRANCAR
 _db = SessionLocal()
 try:
     seed_usuario(_db)
+    seed_rutas(_db)     
 finally:
     _db.close()
 
@@ -144,6 +169,9 @@ SimulationSession = sessionmaker(
 simulaciones_activas = set()
 simulaciones_lock = threading.Lock()
 
+# Intervalo configurable de la simulación (por defecto 15 segundos)
+INTERVALO_SIMULACION = int(os.getenv('SIMULACION_INTERVALO_SEG', '15'))
+
 
 def simular_trayecto_automatico(
     material_id: str,
@@ -151,7 +179,7 @@ def simular_trayecto_automatico(
     conductor_nombre: str
 ):
     """
-    Registra una etapa cada 15 segundos.
+    Registra una etapa cada INTERVALO_SIMULACION segundos.
     La simulación empieza después de asignar conductor y ruta.
     """
     etapas = [
@@ -164,7 +192,7 @@ def simular_trayecto_automatico(
     db = SimulationSession()
     try:
         for ubicacion, estado in etapas:
-            time.sleep(15)
+            time.sleep(INTERVALO_SIMULACION)  # <--- Usamos la variable configurable aquí
 
             material = (
                 db.query(models.Material)
