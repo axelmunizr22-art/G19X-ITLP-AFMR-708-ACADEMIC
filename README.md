@@ -86,6 +86,7 @@ pip install -r requirements.txt
 
 ### 3. Configurar las variables de entorno
 
+
 Copia el archivo `.env.example` y nómbralo `.env` dentro de la carpeta `trazabilidad-backend`.
 
 En Windows PowerShell:
@@ -110,8 +111,9 @@ Abre el archivo `.env` y configura las variables necesarias:
 ```env
 ADMIN_CORREO=admin@plurionetrace.com
 ADMIN_PASSWORD=tu_contrasena_segura
+SECRET_KEY=
+SIMULACION_INTERVALO_SEG=15
 GEMINI_API_KEY=tu_clave_de_api_de_gemini
-SECRET_KEY=tu_llave_secreta_jwt_super_segura
 DATABASE_URL=sqlite:///./trazabilidad.db
 ```
 
@@ -119,6 +121,11 @@ DATABASE_URL=sqlite:///./trazabilidad.db
 
 - ADMIN_CORREO y ADMIN_PASSWORD: Credenciales del administrador inicial (cargadas de manera segura en el backend mediante la función seed_usuario(), evitando contraseñas quemadas en el código fuente).
 - SECRET_KEY: Llave criptográfica estricta para firmar y validar los tokens JWT de sesión.
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+Copia el resultado de la consola y pégalo en SECRET_KEY= dentro de tu archivo .env.
+- SIMULACION_INTERVALO_SEG: Define los segundos de pausa entre cada etapa de la simulación automática de trayectos (por omisión 15).
 - GEMINI_API_KEY: Tu clave personal de Google Gemini para la inteligencia artificial.
 - No compartas tu archivo .env ni publiques tus credenciales en GitHub.
 - El archivo .env debe estar excluido del control de versiones mediante .gitignore.
@@ -264,6 +271,22 @@ cd trazabilidad-backend
 pytest
 ```
 
+## Datos de prueba
+
+El sistema inicializa automáticamente cuatro rutas de demostración al arrancar para facilitar la evaluación de los niveles de riesgo inteligente por tiempo y distancia:
+
+| Destino | Distancia | Tiempo Estimado | Propósito en Demostración |
+| :--- | :--- | :--- | :--- |
+| **Tijuana, BCN** | 2800 km (guardado como 2800) | 40 horas | Ruta larga de prueba general |
+| **Chiapas, CHP** | 1100 km | 16 horas | Ruta de distancia media |
+| **Guadalajara, JAL** | 540 km | 7 horas | Ruta regional estándar |
+| **Monterrey, NLE** | 900 km | 2 min | **Ruta corta para demostración rápida de niveles de riesgo (Medio/Alto)** |
+
+### Cómo verificar los niveles de riesgo:
+1. Inicia sesión en la plataforma.
+2. Crea un nuevo envío asignando el destino **Monterrey, NLE**.
+3. Abre el panel de seguimiento o guía del envío.
+4. Observa el cambio en el diagnóstico inteligente a los 2 y 3 minutos de simulación para validar la transición de riesgo.
 
 
 ##  Licencia
