@@ -264,6 +264,22 @@ cd trazabilidad-backend
 pytest
 ```
 
+## Datos de prueba
+
+El sistema inicializa automáticamente cuatro rutas de demostración al arrancar para facilitar la evaluación de los niveles de riesgo inteligente por tiempo y distancia:
+
+| Destino | Distancia | Tiempo Estimado | Propósito en Demostración |
+| :--- | :--- | :--- | :--- |
+| **Tijuana, BCN** | 2800 km (guardado como 2800) | 40 horas | Ruta larga de prueba general |
+| **Chiapas, CHP** | 1100 km | 16 horas | Ruta de distancia media |
+| **Guadalajara, JAL** | 540 km | 7 horas | Ruta regional estándar |
+| **Monterrey, NLE** | 900 km | 2 min | **Ruta corta para demostración rápida de niveles de riesgo (Medio/Alto)** |
+
+### Cómo verificar los niveles de riesgo:
+1. Inicia sesión en la plataforma.
+2. Crea un nuevo envío asignando el destino **Monterrey, NLE**.
+3. Abre el panel de seguimiento o guía del envío.
+4. Observa el cambio en el diagnóstico inteligente a los 2 y 3 minutos de simulación para validar la transición de riesgo.
 
 
 ##  Licencia
