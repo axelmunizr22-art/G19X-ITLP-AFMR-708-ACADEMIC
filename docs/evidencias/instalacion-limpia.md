@@ -1,4 +1,4 @@
-# Instalación en carpeta limpia y validación de MVP — 28 de octubre de 2026 · Commit: 0758853
+# Instalación en carpeta limpia y validación de MVP — 7 de noviembre de 2026 · Commit: 2a05be6
 
 | Paso | Qué hice | Resultado | Tiempo |
 |---|---|---|---|
@@ -11,3 +11,5 @@
 | **7** | Registro manual de un checkpoint de avance para el material `MAT-101` mediante el formulario de escaneo. | Evento insertado exitosamente en la bitácora de trazabilidad con actualización de ubicación y estado. | 1 min |
 | **8** | Ejecución de la prueba del simulador IoT: `python trazabilidad-backend/simulador_iot.py MAT-101 "Monterrey"`. | Script conectado correctamente a la API, autenticándose con las credenciales de administrador y enviando la actualización de ubicación con éxito. | 2 min |
 | **9** | Apertura de la vista de guía detallada, descarga del comprobante en PDF y prueba del Chatbot con IA consultando datos del paquete. | Guía visualizada, PDF exportado correctamente mediante `html2pdf.js` y respuestas conversacionales de Gemini generadas con éxito usando el contexto de la base de datos. | 3 min |
+| **10** | Ejecución de pruebas unitarias con pytest dentro de la carpeta trazabilidad-backend. | Todas las pruebas pasaron exitosamente sin errores de configuración. | 2 min |
+| **11** | Asignación de un envío de prueba al destino Monterrey, NLE (ruta corta con tiempo estimado de 2 min) y apertura de su guía detallada. | A los 2 minutos el diagnóstico inteligente cambió a «Medio» y a los 3 minutos a «Alto» antes de completarse la entrega. | 4 min |
